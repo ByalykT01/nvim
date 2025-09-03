@@ -35,7 +35,39 @@ vim.keymap.set("i", "<C-c>", "<Esc>")
 
 vim.keymap.set("n", "Q", "<nop>")
 vim.keymap.set("n", "<C-f>", "<cmd>silent !tmux neww tmux-sessionizer<CR>")
-vim.keymap.set("n", "<leader>f", vim.lsp.buf.format)
+
+-- Smart formatting that works with JDTLS and other LSPs
+vim.keymap.set("n", "<leader>f", function()
+    local filetype = vim.bo.filetype
+
+    if filetype == "java" then
+        -- For Java files, use JDTLS formatting
+        local clients = vim.lsp.get_active_clients({ bufnr = 0 })
+        local jdtls_client = nil
+
+        for _, client in pairs(clients) do
+            if client.name == "jdtls" then
+                jdtls_client = client
+                break
+            end
+        end
+
+        if jdtls_client then
+            vim.lsp.buf.format({
+                async = true,
+                filter = function(client)
+                    return client.name == "jdtls"
+                end
+            })
+        else
+            print("JDTLS not attached, falling back to conform")
+            require("conform").format({ async = true, lsp_fallback = true })
+        end
+    else
+        -- For non-Java files, use conform with LSP fallback
+        require("conform").format({ async = true, lsp_fallback = true })
+    end
+end, { desc = "Smart format" })
 
 vim.keymap.set("n", "<C-k>", "<cmd>cnext<CR>zz")
 vim.keymap.set("n", "<C-j>", "<cmd>cprev<CR>zz")
