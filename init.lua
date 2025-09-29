@@ -27,6 +27,13 @@ vim.pack.add({
   { src = "https://github.com/JavaHello/spring-boot.nvim" },
   { src = "https://github.com/ThePrimeagen/harpoon",           version = "harpoon2" },
   { src = "https://github.com/zigtools/zls" },
+  { src = "https://github.com/hrsh7th/nvim-cmp" },
+  { src = "https://github.com/L3MON4D3/LuaSnip" },
+  { src = "https://github.com/saadparwaiz1/cmp_luasnip" },
+  { src = "https://github.com/hrsh7th/cmp-nvim-lsp" },
+  { src = "https://github.com/hrsh7th/cmp-buffer" },
+  { src = "https://github.com/hrsh7th/cmp-path" },
+  { src = "https://github.com/rafamadriz/friendly-snippets" },
 })
 
 -- Filetype-to-Indentation Mapping
@@ -51,8 +58,26 @@ vim.api.nvim_create_autocmd('FileType', {
   end,
 })
 
+-- Set diagnostic display options
+vim.diagnostic.config({
+  virtual_text = true,
+  signs = true,
+  update_in_insert = false,
+  severity_sort = true,
+  float = {
+    border = "rounded",
+    source = "always",
+  },
+})
+
 -- LSP
-vim.lsp.enable({ "lua_ls", "ts_ls", "zls"})
+local lspconfig = require('lspconfig') 
+local capabilities = require('cmp_nvim_lsp').default_capabilities()
+
+lspconfig.lua_ls.setup({ capabilities = capabilities })
+lspconfig.ts_ls.setup({ capabilities = capabilities })
+lspconfig.zls.setup({ capabilities = capabilities })
+
 vim.keymap.set('n', '<leader>f', vim.lsp.buf.format)
 
 vim.api.nvim_create_autocmd('LspAttach', {
@@ -72,20 +97,15 @@ vim.api.nvim_create_autocmd('LspAttach', {
       { desc = "Show Line Diagnostics", buffer = bufnr })
     vim.keymap.set("n", "[d", function()
       vim.diagnostic.jump({ count = -1 })
+      vim.diagnostic.open_float()
     end, { desc = "Go to Previous Diagnostic", buffer = bufnr })
     vim.keymap.set("n", "]d", function()
       vim.diagnostic.jump({ count = 1 })
+      vim.diagnostic.open_float()
     end, { desc = "Go to Next Diagnostic", buffer = bufnr })
-
-    -- completion for lsp
-    local client = vim.lsp.get_client_by_id(ev.data.client_id)
-    if client:supports_method('textDocument/completion') then
-      vim.lsp.completion.enable(true, client.id, ev.buf, { autotrigger = true })
-    end
   end,
 })
-vim.cmd("set completeopt+=noselect")
-
+-- vim.cmd("set completeopt+=noselect") -- Removed, as cmp.setup handles completeopt
 
 -- jdtls
 
@@ -119,6 +139,7 @@ vim.api.nvim_create_autocmd('FileType', {
         '-data', vim.fn.expand('~/.cache/jdtls-workspace') .. '/' .. vim.fn.fnamemodify(root_dir, ':p:h:t')
       },
       root_dir = root_dir,
+      capabilities = require('cmp_nvim_lsp').default_capabilities(),
     }
 
     jdtls.start_or_attach(config)
@@ -204,6 +225,80 @@ local function set_harpoon_keys()
 end
 
 set_harpoon_keys()
+
+-- Completion setup
+local cmp = require("cmp")
+local luasnip = require("luasnip")
+require("luasnip.loaders.from_vscode").lazy_load()
+
+cmp.setup({
+  completion = {
+    completeopt = "menu,menuone,preview,noselect",
+  },
+  snippet = {
+    expand = function(args)
+      luasnip.lsp_expand(args.body)
+    end,
+  },
+  -- Keymappings are now set up to match ThePrimeagen's configuration
+  mapping = cmp.mapping.preset.insert({
+    -- Select the next and previous item
+    ["<C-n>"] = cmp.mapping.select_next_item(),
+    ["<C-p>"] = cmp.mapping.select_prev_item(),
+
+    -- Scroll the documentation window
+    ["<C-b>"] = cmp.mapping.scroll_docs(-4),
+    ["<C-f>"] = cmp.mapping.scroll_docs(4),
+
+    -- Trigger completion
+    ["<C-Space>"] = cmp.mapping.complete(),
+
+    -- Abort completion
+    ["<C-e>"] = cmp.mapping.abort(),
+
+    -- Accept the selected item
+    ["<C-y>"] = cmp.mapping.confirm({ select = true }),
+
+    -- Tab completion to navigate snippets and suggestions
+    ["<Tab>"] = cmp.mapping(function(fallback)
+      if cmp.visible() then
+        cmp.select_next_item()
+      elseif luasnip.expand_or_jumpable() then
+        luasnip.expand_or_jump()
+      else
+        fallback()
+      end
+    end, { "i", "s" }),
+    ["<S-Tab>"] = cmp.mapping(function(fallback)
+      if cmp.visible() then
+        cmp.select_prev_item()
+      elseif luasnip.jumpable(-1) then
+        luasnip.jump(-1)
+      else
+        fallback()
+      end
+    end, { "i", "s" }),
+  }),
+  -- Completion sources, in order of priority
+  sources = cmp.config.sources({
+    { name = "nvim_lsp" },
+    { name = "luasnip" },
+    { name = "buffer" },
+    { name = "path" },
+  }),
+  -- Formatting to add icons/text next to completion items
+  formatting = {
+    format = function(_, vim_item)
+      vim_item.kind = string.format("%s", vim_item.kind)
+      return vim_item
+    end,
+  },
+  -- Bordered windows for a nicer UI
+  window = {
+    completion = cmp.config.window.bordered(),
+    documentation = cmp.config.window.bordered(),
+  },
+})
 
 -- Style
 vim.cmd("colorscheme rose-pine")
