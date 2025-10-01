@@ -25,7 +25,7 @@ vim.pack.add({
   { src = "https://github.com/mfussenegger/nvim-jdtls" },
   { src = "https://github.com/mbbill/undotree" },
   { src = "https://github.com/JavaHello/spring-boot.nvim" },
-  { src = "https://github.com/ThePrimeagen/harpoon",           version = "harpoon2" },
+  { src = "https://github.com/ThePrimeagen/harpoon",                     version = "harpoon2" },
   { src = "https://github.com/zigtools/zls" },
   { src = "https://github.com/hrsh7th/nvim-cmp" },
   { src = "https://github.com/L3MON4D3/LuaSnip" },
@@ -34,6 +34,11 @@ vim.pack.add({
   { src = "https://github.com/hrsh7th/cmp-buffer" },
   { src = "https://github.com/hrsh7th/cmp-path" },
   { src = "https://github.com/rafamadriz/friendly-snippets" },
+  { src = "https://github.com/mfussenegger/nvim-lint" },
+  { src = "https://github.com/stevearc/conform.nvim" },
+  { src = "https://github.com/williamboman/mason.nvim" },
+  { src = "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim" },
+
 })
 
 -- Filetype-to-Indentation Mapping
@@ -71,14 +76,12 @@ vim.diagnostic.config({
 })
 
 -- LSP
-local lspconfig = require('lspconfig') 
+local lspconfig = require('lspconfig')
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
 lspconfig.lua_ls.setup({ capabilities = capabilities })
 lspconfig.ts_ls.setup({ capabilities = capabilities })
 lspconfig.zls.setup({ capabilities = capabilities })
-
-vim.keymap.set('n', '<leader>f', vim.lsp.buf.format)
 
 vim.api.nvim_create_autocmd('LspAttach', {
   callback = function(ev)
@@ -149,13 +152,17 @@ vim.api.nvim_create_autocmd('FileType', {
 require('spring_boot').init_lsp_commands()
 
 vim.lsp.config['jdtls'] = {
-      init_options = {
-        bundles = require("spring_boot").java_extensions(), -- Add Spring Boot extensions
-      },
+  init_options = {
+    bundles = require("spring_boot").java_extensions(), -- Add Spring Boot extensions
+  },
 }
 -- Packages
 require 'telescope'.setup()
-require 'oil'.setup()
+require 'oil'.setup({
+  view_options = {
+    show_hidden = true
+  }
+})
 require 'harpoon'.setup({
   settings = {
     save_on_toggle = true,
@@ -303,3 +310,97 @@ cmp.setup({
 -- Style
 vim.cmd("colorscheme rose-pine")
 vim.cmd(":hi statusline guibg=NONE")
+
+-- Mason setup for auto-installing linters and formatters
+require("mason").setup({
+  ui = {
+    icons = {
+      package_installed = "✓",
+      package_pending = "➜",
+      package_uninstalled = "✗",
+    },
+  },
+})
+
+require("mason-tool-installer").setup({
+  ensure_installed = {
+    "eslint_d",  -- JS/TS linter (faster than regular eslint)
+    "prettier",  -- Code formatter
+    "prettierd", -- Faster prettier daemon
+    "eslint-lsp"
+  },
+})
+
+vim.api.nvim_create_user_command("EslintFix", function()
+  local current_file = vim.fn.expand("%:p")
+  if current_file == "" then
+    vim.notify("No file to fix", vim.log.levels.WARN)
+    return
+  end
+
+  local cmd = string.format("eslint_d --fix %s", vim.fn.shellescape(current_file))
+  local result = vim.fn.system(cmd)
+
+  if vim.v.shell_error == 0 then
+    vim.cmd("edit!") -- Reload the file
+    vim.notify("ESLint fix applied", vim.log.levels.INFO)
+  else
+    vim.notify("ESLint fix failed: " .. result, vim.log.levels.ERROR)
+  end
+end, { desc = "Fix ESLint issues in current file" })
+
+-- Add keymap for manual ESLint fixing
+vim.keymap.set("n", "<leader>ef", ":EslintFix<CR>", { desc = "Fix ESLint issues" })
+
+-- Linting setup with nvim-lint
+local lint = require("lint")
+
+lint.linters_by_ft = {
+  javascript = { "eslint_d" },
+  typescript = { "eslint_d" },
+  javascriptreact = { "eslint_d" },
+  typescriptreact = { "eslint_d" },
+}
+
+-- Auto-lint on various events
+local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
+vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
+  group = lint_augroup,
+  callback = function()
+    lint.try_lint()
+  end,
+})
+
+-- Formatting setup with conform.nvim
+local conform = require("conform")
+
+conform.setup({
+  formatters_by_ft = {
+    javascript = { "prettierd", "prettier", stop_after_first = true },
+    typescript = { "prettierd", "prettier", stop_after_first = true },
+    javascriptreact = { "prettierd", "prettier", stop_after_first = true },
+    typescriptreact = { "prettierd", "prettier", stop_after_first = true },
+    json = { "prettierd", "prettier", stop_after_first = true },
+    css = { "prettierd", "prettier", stop_after_first = true },
+    html = { "prettierd", "prettier", stop_after_first = true },
+    markdown = { "prettierd", "prettier", stop_after_first = true },
+  },
+  format_on_save = {
+    timeout_ms = 500,
+    lsp_fallback = true,
+  },
+})
+
+-- Add manual format keymap (replaces your existing <leader>f)
+vim.keymap.set({ "n", "v" }, "<leader>f", function()
+  conform.format({
+    lsp_fallback = true,
+    async = false,
+    timeout_ms = 1000,
+  })
+end, { desc = "Format file or range (in visual mode)" })
+
+-- Additional keymaps for linting
+vim.keymap.set("n", "<leader>l", function()
+  lint.try_lint()
+end, { desc = "Trigger linting for current file" })
