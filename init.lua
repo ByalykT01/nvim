@@ -1,18 +1,32 @@
 vim.o.number = true
 vim.o.relativenumber = true
 vim.o.signcolumn = "yes"
+vim.opt.isfname:append("@-@")
 vim.o.wrap = false
 vim.o.tabstop = 4
 vim.o.swapfile = false
 vim.o.winborder = "rounded"
+vim.opt.smartindent = true
+
+vim.opt.backup = false   -- you already have
+vim.opt.swapfile = false -- you already have
+vim.opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
+vim.opt.undofile = true
+
+vim.opt.termguicolors = true
+vim.opt.scrolloff = 8
+vim.opt.updatetime = 50
+vim.opt.colorcolumn = "80"
 
 vim.g.mapleader = " "
+
 
 -- Binds
 vim.keymap.set('n', '<leader>o', ':update<CR> :source<CR>')
 vim.keymap.set({ "n", "v" }, "<leader>y", [["+y]])
 vim.keymap.set("n", "<leader>Y", [["+Y]])
 vim.keymap.set("x", "<leader>p", [["_dP]])
+vim.keymap.set("n", "<leader>gs", vim.cmd.Git)
 
 -- Packer
 vim.pack.add({
@@ -38,6 +52,7 @@ vim.pack.add({
   { src = "https://github.com/stevearc/conform.nvim" },
   { src = "https://github.com/williamboman/mason.nvim" },
   { src = "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim" },
+  { src = "https://github.com/tpope/vim-fugitive" },
 
 })
 
