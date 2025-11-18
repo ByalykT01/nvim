@@ -4,6 +4,9 @@ vim.o.signcolumn = "yes"
 vim.opt.isfname:append("@-@")
 vim.o.wrap = false
 vim.o.tabstop = 4
+vim.o.expandtab = true
+vim.o.shiftwidth = 4
+
 vim.o.swapfile = false
 vim.o.winborder = "rounded"
 vim.opt.smartindent = true
@@ -30,64 +33,40 @@ vim.keymap.set("n", "<leader>gs", vim.cmd.Git)
 
 -- Packer
 vim.pack.add({
-  { src = "https://github.com/rose-pine/neovim" },
-  { src = "https://github.com/stevearc/oil.nvim" },
-  { src = "https://github.com/nvim-telescope/telescope.nvim" },
-  { src = "https://github.com/nvim-lua/plenary.nvim" },
-  { src = "https://github.com/neovim/nvim-lspconfig" },
-  { src = "https://github.com/nvim-treesitter/nvim-treesitter" },
-  { src = "https://github.com/mfussenegger/nvim-jdtls" },
-  { src = "https://github.com/mbbill/undotree" },
-  { src = "https://github.com/JavaHello/spring-boot.nvim" },
-  { src = "https://github.com/ThePrimeagen/harpoon",                     version = "harpoon2" },
-  { src = "https://github.com/zigtools/zls" },
-  { src = "https://github.com/hrsh7th/nvim-cmp" },
-  { src = "https://github.com/L3MON4D3/LuaSnip" },
-  { src = "https://github.com/saadparwaiz1/cmp_luasnip" },
-  { src = "https://github.com/hrsh7th/cmp-nvim-lsp" },
-  { src = "https://github.com/hrsh7th/cmp-buffer" },
-  { src = "https://github.com/hrsh7th/cmp-path" },
-  { src = "https://github.com/rafamadriz/friendly-snippets" },
-  { src = "https://github.com/mfussenegger/nvim-lint" },
-  { src = "https://github.com/stevearc/conform.nvim" },
-  { src = "https://github.com/williamboman/mason.nvim" },
-  { src = "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim" },
-  { src = "https://github.com/tpope/vim-fugitive" },
-
-})
-
--- Filetype-to-Indentation Mapping
-local indent_settings = {
-  python = { tabstop = 4, shiftwidth = 4, expandtab = true },
-  java = { tabstop = 4, shiftwidth = 4, expandtab = true },
-  javascript = { tabstop = 2, shiftwidth = 2, expandtab = true },
-  typescript = { tabstop = 2, shiftwidth = 2, expandtab = true },
-  lua = { tabstop = 2, shiftwidth = 2, expandtab = true },
-}
-
-vim.api.nvim_create_autocmd('FileType', {
-  pattern = vim.tbl_keys(indent_settings),
-  callback = function(ev)
-    local ft = vim.bo[ev.buf].filetype
-    local settings = indent_settings[ft]
-    if settings then
-      vim.bo[ev.buf].tabstop = settings.tabstop
-      vim.bo[ev.buf].shiftwidth = settings.shiftwidth
-      vim.bo[ev.buf].expandtab = settings.expandtab
-    end
-  end,
+    { src = "https://github.com/rose-pine/neovim" },
+    { src = "https://github.com/stevearc/oil.nvim" },
+    { src = "https://github.com/nvim-telescope/telescope.nvim" },
+    { src = "https://github.com/nvim-lua/plenary.nvim" },
+    { src = "https://github.com/neovim/nvim-lspconfig" },
+    { src = "https://github.com/nvim-treesitter/nvim-treesitter" },
+    { src = "https://github.com/mfussenegger/nvim-jdtls" },
+    { src = "https://github.com/mbbill/undotree" },
+    { src = "https://github.com/ThePrimeagen/harpoon",                     version = "harpoon2" },
+    { src = "https://github.com/zigtools/zls" },
+    { src = "https://github.com/hrsh7th/nvim-cmp" },
+    { src = "https://github.com/L3MON4D3/LuaSnip" },
+    { src = "https://github.com/saadparwaiz1/cmp_luasnip" },
+    { src = "https://github.com/hrsh7th/cmp-nvim-lsp" },
+    { src = "https://github.com/hrsh7th/cmp-buffer" },
+    { src = "https://github.com/hrsh7th/cmp-path" },
+    { src = "https://github.com/rafamadriz/friendly-snippets" },
+    { src = "https://github.com/mfussenegger/nvim-lint" },
+    { src = "https://github.com/stevearc/conform.nvim" },
+    { src = "https://github.com/williamboman/mason.nvim" },
+    { src = "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim" },
+    { src = "https://github.com/tpope/vim-fugitive" },
 })
 
 -- Set diagnostic display options
 vim.diagnostic.config({
-  virtual_text = true,
-  signs = true,
-  update_in_insert = false,
-  severity_sort = true,
-  float = {
-    border = "rounded",
-    source = "always",
-  },
+    virtual_text = true,
+    signs = true,
+    update_in_insert = false,
+    severity_sort = true,
+    float = {
+        border = "rounded",
+        source = "always",
+    },
 })
 
 -- LSP
@@ -100,92 +79,108 @@ lspconfig.zls.setup({ capabilities = capabilities })
 lspconfig.pyright.setup({ capabilities = capabilities })
 
 vim.api.nvim_create_autocmd('LspAttach', {
-  callback = function(ev)
-    local bufnr = ev.buf
+    callback = function(ev)
+        local bufnr = ev.buf
 
-    -- keybinds for lsp
-    vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "LSP: Hover Documentation", buffer = bufnr })
-    vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "LSP: Go to Definition", buffer = bufnr })
-    vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { desc = "LSP: Go to Declaration", buffer = bufnr })
-    vim.keymap.set("n", "gi", vim.lsp.buf.implementation,
-      { desc = "LSP: Go to Implementation", buffer = bufnr })
-    vim.keymap.set("n", "gr", vim.lsp.buf.references, { desc = "LSP: Go to References", buffer = bufnr })
-    vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "LSP: Rename", buffer = bufnr })
-    vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "LSP: Code Action", buffer = bufnr })
-    vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float,
-      { desc = "Show Line Diagnostics", buffer = bufnr })
-    vim.keymap.set("n", "[d", function()
-      vim.diagnostic.jump({ count = -1 })
-      vim.diagnostic.open_float()
-    end, { desc = "Go to Previous Diagnostic", buffer = bufnr })
-    vim.keymap.set("n", "]d", function()
-      vim.diagnostic.jump({ count = 1 })
-      vim.diagnostic.open_float()
-    end, { desc = "Go to Next Diagnostic", buffer = bufnr })
-  end,
+        -- keybinds for lsp
+        vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "LSP: Hover Documentation", buffer = bufnr })
+        vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "LSP: Go to Definition", buffer = bufnr })
+        vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { desc = "LSP: Go to Declaration", buffer = bufnr })
+        vim.keymap.set("n", "gi", vim.lsp.buf.implementation,
+            { desc = "LSP: Go to Implementation", buffer = bufnr })
+        vim.keymap.set("n", "gr", vim.lsp.buf.references, { desc = "LSP: Go to References", buffer = bufnr })
+        vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "LSP: Rename", buffer = bufnr })
+        vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "LSP: Code Action", buffer = bufnr })
+        vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float,
+            { desc = "Show Line Diagnostics", buffer = bufnr })
+        vim.keymap.set("n", "[d", function()
+            vim.diagnostic.jump({ count = -1 })
+            vim.diagnostic.open_float()
+        end, { desc = "Go to Previous Diagnostic", buffer = bufnr })
+        vim.keymap.set("n", "]d", function()
+            vim.diagnostic.jump({ count = 1 })
+            vim.diagnostic.open_float()
+        end, { desc = "Go to Next Diagnostic", buffer = bufnr })
+    end,
 })
 -- vim.cmd("set completeopt+=noselect") -- Removed, as cmp.setup handles completeopt
 
 -- jdtls
-
 vim.api.nvim_create_autocmd('FileType', {
-  pattern = 'java',
-  callback = function()
-    local jdtls = require('jdtls')
+    pattern = 'java',
+    callback = function()
+        local jdtls = require('jdtls')
+        local java_home = os.getenv("JAVA_HOME")
 
-    local root_dir = jdtls.setup.find_root({ '.git', 'mvnw', 'gradlew', 'pom.xml', 'build.gradle' })
-    local home = os.getenv("HOME")
-    local jdtls_base_path = home .. '/.local/share/nvim/mason/packages/jdtls'
-    local lombok_path = home .. '/.m2/repository/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar'
-    local launcher_path = vim.fn.glob(jdtls_base_path .. '/plugins/org.eclipse.equinox.launcher_*.jar')
-    local config_path = jdtls_base_path .. '/config_' .. (vim.fn.has('mac') == 1 and 'mac' or 'linux')
+        local root_dir = jdtls.setup.find_root({ '.git', 'mvnw', 'gradlew', 'pom.xml', 'build.gradle' })
+        local home = os.getenv("HOME")
+        local jdtls_base_path = home .. '/.local/share/nvim/mason/packages/jdtls'
+        local lombok_path = home .. '/.m2/repository/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar'
+        local launcher_path = vim.fn.glob(jdtls_base_path .. '/plugins/org.eclipse.equinox.launcher_*.jar')
+        local config_path = jdtls_base_path .. '/config_' .. (vim.fn.has('mac') == 1 and 'mac' or 'linux')
 
-    local config = {
-      cmd = {
-        'java',
-        '-Declipse.application=org.eclipse.jdt.ls.core.id1',
-        '-Dosgi.bundles.defaultStartLevel=4',
-        '-Declipse.product=org.eclipse.jdt.ls.core.product',
-        '-Dlog.protocol=true',
-        '-Dlog.level=ALL',
-        '-Xms1g',
-        '--add-modules=ALL-SYSTEM',
-        '--add-opens', 'java.base/java.util=ALL-UNNAMED',
-        '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
-        '-javaagent:' .. lombok_path,
-        '-jar', launcher_path,
-        '-configuration', config_path,
-        '-data', vim.fn.expand('~/.cache/jdtls-workspace') .. '/' .. vim.fn.fnamemodify(root_dir, ':p:h:t')
-      },
-      root_dir = root_dir,
-      capabilities = require('cmp_nvim_lsp').default_capabilities(),
-    }
+        local project_name = vim.fn.fnamemodify(root_dir, ':p:h:t')
+        local workspace_dir = home .. '/.cache/jdtls-workspace/' .. project_name
 
-    jdtls.start_or_attach(config)
-  end,
+        local config = {
+            cmd = {
+                'java',
+                '-Declipse.application=org.eclipse.jdt.ls.core.id1',
+                '-Dosgi.bundles.defaultStartLevel=4',
+                '-Declipse.product=org.eclipse.jdt.ls.core.product',
+                '-Dlog.protocol=true',
+                '-Dlog.level=ALL',
+                '-Xms1g',
+                '--add-modules=ALL-SYSTEM',
+                '--add-opens', 'java.base/java.util=ALL-UNNAMED',
+                '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+                '-javaagent:' .. lombok_path,
+                '-jar', launcher_path,
+                '-configuration', config_path,
+                '-data', workspace_dir,
+            },
+            root_dir = root_dir,
+            capabilities = require('cmp_nvim_lsp').default_capabilities(),
+
+            settings = {
+                java = {
+                    signatureHelp = { enabled = true },
+                    contentProvider = { preferred = 'fernflower' },
+                    saveActions = { organizeImports = true },
+
+                    -- Java 25 support
+                    configuration = {
+                        runtimes = {
+                            {
+                                name = "JavaSE-25",
+                                path = java_home,
+                                default = true,
+                            },
+                        },
+                    },
+                },
+            },
+
+        }
+
+        jdtls.start_or_attach(config)
+    end,
 })
 
-require('spring_boot').init_lsp_commands()
-
-vim.lsp.config['jdtls'] = {
-  init_options = {
-    bundles = require("spring_boot").java_extensions(), -- Add Spring Boot extensions
-  },
-}
 -- Packages
 require 'telescope'.setup()
 require 'oil'.setup({
-  view_options = {
-    show_hidden = true
-  }
+    view_options = {
+        show_hidden = true
+    }
 })
 require 'harpoon'.setup({
-  settings = {
-    save_on_toggle = true,
-  },
-  menu = {
-    width = vim.api.nvim_win_get_width(0) - 4,
-  },
+    settings = {
+        save_on_toggle = true,
+    },
+    menu = {
+        width = vim.api.nvim_win_get_width(0) - 4,
+    },
 })
 
 -- telescope
@@ -201,50 +196,39 @@ vim.keymap.set('n', '<leader>pv', ":Oil<CR>")
 -- undotree
 vim.keymap.set('n', '<leader><F5>', ":UndotreeToggle<CR>")
 
--- spring boot
-require('spring_boot').setup({
-  lsp_fallback = true,
-})
-
-vim.keymap.set('n', '<leader>sb', function()
-  require('telescope.builtin').lsp_workspace_symbols({
-    query = '@',
-  })
-end, { desc = "Find Spring Beans" })
-
 -- harpoon
 local function set_harpoon_keys()
-  local keys = {
-    {
-      "<leader>H",
-      function()
-        require("harpoon"):list():add()
-      end,
-      desc = "Harpoon File",
-    },
-    {
-      "<leader>h",
-      function()
-        local harpoon = require("harpoon")
-        harpoon.ui:toggle_quick_menu(harpoon:list())
-      end,
-      desc = "Harpoon Quick Menu",
-    },
-  }
+    local keys = {
+        {
+            "<leader>H",
+            function()
+                require("harpoon"):list():add()
+            end,
+            desc = "Harpoon File",
+        },
+        {
+            "<leader>h",
+            function()
+                local harpoon = require("harpoon")
+                harpoon.ui:toggle_quick_menu(harpoon:list())
+            end,
+            desc = "Harpoon Quick Menu",
+        },
+    }
 
-  for i = 1, 5 do
-    table.insert(keys, {
-      "<leader>" .. i,
-      function()
-        require("harpoon"):list():select(i)
-      end,
-      desc = "Harpoon to File " .. i,
-    })
-  end
+    for i = 1, 5 do
+        table.insert(keys, {
+            "<leader>" .. i,
+            function()
+                require("harpoon"):list():select(i)
+            end,
+            desc = "Harpoon to File " .. i,
+        })
+    end
 
-  for _, mapping in ipairs(keys) do
-    vim.keymap.set("n", mapping[1], mapping[2], { desc = mapping.desc })
-  end
+    for _, mapping in ipairs(keys) do
+        vim.keymap.set("n", mapping[1], mapping[2], { desc = mapping.desc })
+    end
 end
 
 set_harpoon_keys()
@@ -255,72 +239,72 @@ local luasnip = require("luasnip")
 require("luasnip.loaders.from_vscode").lazy_load()
 
 cmp.setup({
-  completion = {
-    completeopt = "menu,menuone,preview,noselect",
-  },
-  snippet = {
-    expand = function(args)
-      luasnip.lsp_expand(args.body)
-    end,
-  },
-  -- Keymappings are now set up to match ThePrimeagen's configuration
-  mapping = cmp.mapping.preset.insert({
-    -- Select the next and previous item
-    ["<C-n>"] = cmp.mapping.select_next_item(),
-    ["<C-p>"] = cmp.mapping.select_prev_item(),
+    completion = {
+        completeopt = "menu,menuone,preview,noselect",
+    },
+    snippet = {
+        expand = function(args)
+            luasnip.lsp_expand(args.body)
+        end,
+    },
+    -- Keymappings are now set up to match ThePrimeagen's configuration
+    mapping = cmp.mapping.preset.insert({
+        -- Select the next and previous item
+        ["<C-n>"] = cmp.mapping.select_next_item(),
+        ["<C-p>"] = cmp.mapping.select_prev_item(),
 
-    -- Scroll the documentation window
-    ["<C-b>"] = cmp.mapping.scroll_docs(-4),
-    ["<C-f>"] = cmp.mapping.scroll_docs(4),
+        -- Scroll the documentation window
+        ["<C-b>"] = cmp.mapping.scroll_docs(-4),
+        ["<C-f>"] = cmp.mapping.scroll_docs(4),
 
-    -- Trigger completion
-    ["<C-Space>"] = cmp.mapping.complete(),
+        -- Trigger completion
+        ["<C-Space>"] = cmp.mapping.complete(),
 
-    -- Abort completion
-    ["<C-e>"] = cmp.mapping.abort(),
+        -- Abort completion
+        ["<C-e>"] = cmp.mapping.abort(),
 
-    -- Accept the selected item
-    ["<C-y>"] = cmp.mapping.confirm({ select = true }),
+        -- Accept the selected item
+        ["<C-y>"] = cmp.mapping.confirm({ select = true }),
 
-    -- Tab completion to navigate snippets and suggestions
-    ["<Tab>"] = cmp.mapping(function(fallback)
-      if cmp.visible() then
-        cmp.select_next_item()
-      elseif luasnip.expand_or_jumpable() then
-        luasnip.expand_or_jump()
-      else
-        fallback()
-      end
-    end, { "i", "s" }),
-    ["<S-Tab>"] = cmp.mapping(function(fallback)
-      if cmp.visible() then
-        cmp.select_prev_item()
-      elseif luasnip.jumpable(-1) then
-        luasnip.jump(-1)
-      else
-        fallback()
-      end
-    end, { "i", "s" }),
-  }),
-  -- Completion sources, in order of priority
-  sources = cmp.config.sources({
-    { name = "nvim_lsp" },
-    { name = "luasnip" },
-    { name = "buffer" },
-    { name = "path" },
-  }),
-  -- Formatting to add icons/text next to completion items
-  formatting = {
-    format = function(_, vim_item)
-      vim_item.kind = string.format("%s", vim_item.kind)
-      return vim_item
-    end,
-  },
-  -- Bordered windows for a nicer UI
-  window = {
-    completion = cmp.config.window.bordered(),
-    documentation = cmp.config.window.bordered(),
-  },
+        -- Tab completion to navigate snippets and suggestions
+        ["<Tab>"] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+                cmp.select_next_item()
+            elseif luasnip.expand_or_jumpable() then
+                luasnip.expand_or_jump()
+            else
+                fallback()
+            end
+        end, { "i", "s" }),
+        ["<S-Tab>"] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+                cmp.select_prev_item()
+            elseif luasnip.jumpable(-1) then
+                luasnip.jump(-1)
+            else
+                fallback()
+            end
+        end, { "i", "s" }),
+    }),
+    -- Completion sources, in order of priority
+    sources = cmp.config.sources({
+        { name = "nvim_lsp" },
+        { name = "luasnip" },
+        { name = "buffer" },
+        { name = "path" },
+    }),
+    -- Formatting to add icons/text next to completion items
+    formatting = {
+        format = function(_, vim_item)
+            vim_item.kind = string.format("%s", vim_item.kind)
+            return vim_item
+        end,
+    },
+    -- Bordered windows for a nicer UI
+    window = {
+        completion = cmp.config.window.bordered(),
+        documentation = cmp.config.window.bordered(),
+    },
 })
 
 -- Style
@@ -329,40 +313,40 @@ vim.cmd(":hi statusline guibg=NONE")
 
 -- Mason setup for auto-installing linters and formatters
 require("mason").setup({
-  ui = {
-    icons = {
-      package_installed = "✓",
-      package_pending = "➜",
-      package_uninstalled = "✗",
+    ui = {
+        icons = {
+            package_installed = "✓",
+            package_pending = "➜",
+            package_uninstalled = "✗",
+        },
     },
-  },
 })
 
 require("mason-tool-installer").setup({
-  ensure_installed = {
-    "eslint_d",  -- JS/TS linter (faster than regular eslint)
-    "prettier",  -- Code formatter
-    "prettierd", -- Faster prettier daemon
-    "eslint-lsp"
-  },
+    ensure_installed = {
+        "eslint_d",  -- JS/TS linter (faster than regular eslint)
+        "prettier",  -- Code formatter
+        "prettierd", -- Faster prettier daemon
+        "eslint-lsp"
+    },
 })
 
 vim.api.nvim_create_user_command("EslintFix", function()
-  local current_file = vim.fn.expand("%:p")
-  if current_file == "" then
-    vim.notify("No file to fix", vim.log.levels.WARN)
-    return
-  end
+    local current_file = vim.fn.expand("%:p")
+    if current_file == "" then
+        vim.notify("No file to fix", vim.log.levels.WARN)
+        return
+    end
 
-  local cmd = string.format("eslint_d --fix %s", vim.fn.shellescape(current_file))
-  local result = vim.fn.system(cmd)
+    local cmd = string.format("eslint_d --fix %s", vim.fn.shellescape(current_file))
+    local result = vim.fn.system(cmd)
 
-  if vim.v.shell_error == 0 then
-    vim.cmd("edit!") -- Reload the file
-    vim.notify("ESLint fix applied", vim.log.levels.INFO)
-  else
-    vim.notify("ESLint fix failed: " .. result, vim.log.levels.ERROR)
-  end
+    if vim.v.shell_error == 0 then
+        vim.cmd("edit!") -- Reload the file
+        vim.notify("ESLint fix applied", vim.log.levels.INFO)
+    else
+        vim.notify("ESLint fix failed: " .. result, vim.log.levels.ERROR)
+    end
 end, { desc = "Fix ESLint issues in current file" })
 
 -- Add keymap for manual ESLint fixing
@@ -372,51 +356,51 @@ vim.keymap.set("n", "<leader>ef", ":EslintFix<CR>", { desc = "Fix ESLint issues"
 local lint = require("lint")
 
 lint.linters_by_ft = {
-  javascript = { "eslint_d" },
-  typescript = { "eslint_d" },
-  javascriptreact = { "eslint_d" },
-  typescriptreact = { "eslint_d" },
+    javascript = { "eslint_d" },
+    typescript = { "eslint_d" },
+    javascriptreact = { "eslint_d" },
+    typescriptreact = { "eslint_d" },
 }
 
 -- Auto-lint on various events
 local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
 vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
-  group = lint_augroup,
-  callback = function()
-    lint.try_lint()
-  end,
+    group = lint_augroup,
+    callback = function()
+        lint.try_lint()
+    end,
 })
 
 -- Formatting setup with conform.nvim
 local conform = require("conform")
 
 conform.setup({
-  formatters_by_ft = {
-    javascript = { "prettierd", "prettier", stop_after_first = true },
-    typescript = { "prettierd", "prettier", stop_after_first = true },
-    javascriptreact = { "prettierd", "prettier", stop_after_first = true },
-    typescriptreact = { "prettierd", "prettier", stop_after_first = true },
-    json = { "prettierd", "prettier", stop_after_first = true },
-    css = { "prettierd", "prettier", stop_after_first = true },
-    html = { "prettierd", "prettier", stop_after_first = true },
-    markdown = { "prettierd", "prettier", stop_after_first = true },
-  },
-  format_on_save = {
-    timeout_ms = 500,
-    lsp_fallback = true,
-  },
+    formatters_by_ft = {
+        javascript = { "prettierd", "prettier", stop_after_first = true },
+        typescript = { "prettierd", "prettier", stop_after_first = true },
+        javascriptreact = { "prettierd", "prettier", stop_after_first = true },
+        typescriptreact = { "prettierd", "prettier", stop_after_first = true },
+        json = { "prettierd", "prettier", stop_after_first = true },
+        css = { "prettierd", "prettier", stop_after_first = true },
+        html = { "prettierd", "prettier", stop_after_first = true },
+        markdown = { "prettierd", "prettier", stop_after_first = true },
+    },
+    format_on_save = {
+        timeout_ms = 500,
+        lsp_fallback = true,
+    },
 })
 
 -- Add manual format keymap (replaces your existing <leader>f)
 vim.keymap.set({ "n", "v" }, "<leader>f", function()
-  conform.format({
-    lsp_fallback = true,
-    async = false,
-    timeout_ms = 1000,
-  })
+    conform.format({
+        lsp_fallback = true,
+        async = false,
+        timeout_ms = 1000,
+    })
 end, { desc = "Format file or range (in visual mode)" })
 
 -- Additional keymaps for linting
 vim.keymap.set("n", "<leader>l", function()
-  lint.try_lint()
+    lint.try_lint()
 end, { desc = "Trigger linting for current file" })
