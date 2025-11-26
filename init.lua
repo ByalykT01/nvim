@@ -11,6 +11,27 @@ vim.o.swapfile = false
 vim.o.winborder = "rounded"
 vim.opt.smartindent = true
 
+-- Filetype-specific indentation settings
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = { "java" },
+    callback = function()
+        vim.opt_local.tabstop = 4
+        vim.opt_local.shiftwidth = 4
+        vim.opt_local.expandtab = true
+        vim.opt_local.cindent = true
+        vim.opt_local.cinoptions = "j1,(0,ws,Ws"
+    end,
+})
+
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
+    callback = function()
+        vim.opt_local.tabstop = 2
+        vim.opt_local.shiftwidth = 2
+        vim.opt_local.expandtab = true
+    end,
+})
+
 vim.opt.backup = false   -- you already have
 vim.opt.swapfile = false -- you already have
 vim.opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
@@ -74,7 +95,49 @@ local lspconfig = require('lspconfig')
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
 lspconfig.lua_ls.setup({ capabilities = capabilities })
-lspconfig.ts_ls.setup({ capabilities = capabilities })
+lspconfig.ts_ls.setup({
+    capabilities = capabilities,
+    settings = {
+        typescript = {
+            inlayHints = {
+                includeInlayParameterNameHints = "all",
+                includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                includeInlayFunctionParameterTypeHints = true,
+                includeInlayVariableTypeHints = true,
+                includeInlayPropertyDeclarationTypeHints = true,
+                includeInlayFunctionLikeReturnTypeHints = true,
+                includeInlayEnumMemberValueHints = true,
+            },
+            suggest = {
+                completeFunctionCalls = true,
+            },
+            format = {
+                indentSize = 2,
+                tabSize = 2,
+                convertTabsToSpaces = true,
+            },
+        },
+        javascript = {
+            inlayHints = {
+                includeInlayParameterNameHints = "all",
+                includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                includeInlayFunctionParameterTypeHints = true,
+                includeInlayVariableTypeHints = true,
+                includeInlayPropertyDeclarationTypeHints = true,
+                includeInlayFunctionLikeReturnTypeHints = true,
+                includeInlayEnumMemberValueHints = true,
+            },
+            suggest = {
+                completeFunctionCalls = true,
+            },
+            format = {
+                indentSize = 2,
+                tabSize = 2,
+                convertTabsToSpaces = true,
+            },
+        },
+    },
+})
 lspconfig.zls.setup({ capabilities = capabilities })
 lspconfig.pyright.setup({ capabilities = capabilities })
 
@@ -158,6 +221,69 @@ vim.api.nvim_create_autocmd('FileType', {
                             },
                         },
                     },
+
+                    -- Completion settings
+                    completion = {
+                        favoriteStaticMembers = {
+                            "org.junit.Assert.*",
+                            "org.junit.jupiter.api.Assertions.*",
+                            "org.mockito.Mockito.*",
+                            "java.util.Objects.requireNonNull",
+                            "java.util.Objects.requireNonNullElse",
+                        },
+                        importOrder = {
+                            "java",
+                            "javax",
+                            "com",
+                            "org",
+                        },
+                        filteredTypes = {
+                            "com.sun.*",
+                            "io.micrometer.shaded.*",
+                            "java.awt.*",
+                            "jdk.*",
+                            "sun.*",
+                        },
+                    },
+
+                    -- Sources
+                    sources = {
+                        organizeImports = {
+                            starThreshold = 9999,
+                            staticStarThreshold = 9999,
+                        },
+                    },
+
+                    -- Code generation
+                    codeGeneration = {
+                        toString = {
+                            template = "${object.className}{${member.name()}=${member.value}, ${otherMembers}}",
+                        },
+                        useBlocks = true,
+                        hashCodeEquals = {
+                            useInstanceof = true,
+                            useJava7Objects = true,
+                        },
+                    },
+
+                    -- Formatting
+                    format = {
+                        enabled = true,
+                        settings = {
+                            profile = "GoogleStyle",
+                        },
+                    },
+
+                    -- Inlay hints
+                    inlayHints = {
+                        parameterNames = {
+                            enabled = "all",
+                        },
+                    },
+
+                    -- References and implementation code lens
+                    referencesCodeLens = { enabled = true },
+                    implementationsCodeLens = { enabled = true },
                 },
             },
 
@@ -180,6 +306,20 @@ require 'harpoon'.setup({
     },
     menu = {
         width = vim.api.nvim_win_get_width(0) - 4,
+    },
+})
+
+-- Treesitter setup for better syntax highlighting and indentation
+require 'nvim-treesitter.configs'.setup({
+    ensure_installed = { "java", "typescript", "javascript", "tsx", "lua", "python", "zig", "json", "html", "css" },
+    sync_install = false,
+    auto_install = true,
+    highlight = {
+        enable = true,
+        additional_vim_regex_highlighting = false,
+    },
+    indent = {
+        enable = true,
     },
 })
 
