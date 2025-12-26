@@ -1,0 +1,117 @@
+{
+  "plugins": {
+    "LuaSnip": {
+      "rev": "b3104910bb5ebf40492aadffae18f2528fa757d9",
+      "src": "https://github.com/L3MON4D3/LuaSnip"
+    },
+    "cmp-buffer": {
+      "rev": "b74fab3656eea9de20a9b8116afa3cfc4ec09657",
+      "src": "https://github.com/hrsh7th/cmp-buffer"
+    },
+    "cmp-nvim-lsp": {
+      "rev": "bd5a7d6db125d4654b50eeae9f5217f24bb22fd3",
+      "src": "https://github.com/hrsh7th/cmp-nvim-lsp"
+    },
+    "cmp-path": {
+      "rev": "c642487086dbd9a93160e1679a1327be111cbc25",
+      "src": "https://github.com/hrsh7th/cmp-path"
+    },
+    "cmp_luasnip": {
+      "rev": "98d9cb5c2c38532bd9bdb481067b20fea8f32e90",
+      "src": "https://github.com/saadparwaiz1/cmp_luasnip"
+    },
+    "conform.nvim": {
+      "rev": "c64cc754ace603e185ab30113aaef174187eacf8",
+      "src": "https://github.com/stevearc/conform.nvim"
+    },
+    "easy-dotnet.nvim": {
+      "rev": "c4f73ef4299aa6c55e264bb4486e5a796e9a5466",
+      "src": "https://github.com/GustavEikaas/easy-dotnet.nvim"
+    },
+    "eclipse.jdt.ls": {
+      "rev": "5ba96401e288aaa44c55af9b8a16a063963916ce",
+      "src": "https://github.com/eclipse-jdtls/eclipse.jdt.ls"
+    },
+    "friendly-snippets": {
+      "rev": "572f5660cf05f8cd8834e096d7b4c921ba18e175",
+      "src": "https://github.com/rafamadriz/friendly-snippets"
+    },
+    "harpoon": {
+      "rev": "ed1f853847ffd04b2b61c314865665e1dadf22c7",
+      "src": "https://github.com/ThePrimeagen/harpoon",
+      "version": "'harpoon2'"
+    },
+    "htmx-lsp": {
+      "rev": "a05bf01d33710f1e86e3e4165badda9826a7a9bb",
+      "src": "https://github.com/ThePrimeagen/htmx-lsp"
+    },
+    "mason-tool-installer.nvim": {
+      "rev": "517ef5994ef9d6b738322664d5fdd948f0fdeb46",
+      "src": "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim"
+    },
+    "mason.nvim": {
+      "rev": "a83eabdc8c49c0c93bf5bb162fa3b57404a9d095",
+      "src": "https://github.com/williamboman/mason.nvim"
+    },
+    "neovim": {
+      "rev": "72a04c4065345b51b56aed4859ea1d884f734097",
+      "src": "https://github.com/rose-pine/neovim"
+    },
+    "nvim-cmp": {
+      "rev": "b5311ab3ed9c846b585c0c15b7559be131ec4be9",
+      "src": "https://github.com/hrsh7th/nvim-cmp"
+    },
+    "nvim-java": {
+      "rev": "3d56b7461facb42f135e25b2636bf220a7f0ed42",
+      "src": "https://github.com/nvim-java/nvim-java"
+    },
+    "nvim-jdtls": {
+      "rev": "b69924ca90014fef485ee153571bdcbc1ece8c2e",
+      "src": "https://github.com/mfussenegger/nvim-jdtls"
+    },
+    "nvim-lint": {
+      "rev": "335a6044be16d7701001059cba9baa36fbeef422",
+      "src": "https://github.com/mfussenegger/nvim-lint"
+    },
+    "nvim-lspconfig": {
+      "rev": "336b388c272555d2ae94627a50df4c2f89a5e257",
+      "src": "https://github.com/neovim/nvim-lspconfig"
+    },
+    "nvim-treesitter": {
+      "rev": "42fc28ba918343ebfd5565147a42a26580579482",
+      "src": "https://github.com/nvim-treesitter/nvim-treesitter"
+    },
+    "oil.nvim": {
+      "rev": "07f80ad645895af849a597d1cac897059d89b686",
+      "src": "https://github.com/stevearc/oil.nvim"
+    },
+    "plenary.nvim": {
+      "rev": "b9fd5226c2f76c951fc8ed5923d85e4de065e509",
+      "src": "https://github.com/nvim-lua/plenary.nvim"
+    },
+    "spring-boot.nvim": {
+      "rev": "dff5fc9ff38dc60514caf95d57b0dbcd4da9028a",
+      "src": "https://github.com/JavaHello/spring-boot.nvim"
+    },
+    "springboot-nvim": {
+      "rev": "105fb2a0b54fbd819200b244e8079c4c9f1a8415",
+      "src": "https://github.com/elmcgill/springboot-nvim"
+    },
+    "telescope.nvim": {
+      "rev": "b4da76be54691e854d3e0e02c36b0245f945c2c7",
+      "src": "https://github.com/nvim-telescope/telescope.nvim"
+    },
+    "undotree": {
+      "rev": "fe9a9d0645f0f5532360b5e5f5c550d7bb4f1869",
+      "src": "https://github.com/mbbill/undotree"
+    },
+    "vim-fugitive": {
+      "rev": "61b51c09b7c9ce04e821f6cf76ea4f6f903e3cf4",
+      "src": "https://github.com/tpope/vim-fugitive"
+    },
+    "zls": {
+      "rev": "829f566c1203ab98612577885a85e07eb0101961",
+      "src": "https://github.com/zigtools/zls"
+    }
+  }
+}

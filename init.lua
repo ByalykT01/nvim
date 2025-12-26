@@ -169,127 +169,57 @@ vim.api.nvim_create_autocmd('LspAttach', {
 -- vim.cmd("set completeopt+=noselect") -- Removed, as cmp.setup handles completeopt
 
 -- jdtls
-vim.api.nvim_create_autocmd('FileType', {
-    pattern = 'java',
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = "java",
     callback = function()
-        local jdtls = require('jdtls')
-        local java_home = os.getenv("JAVA_HOME")
+        local jdtls = require("jdtls")
 
-        local root_dir = jdtls.setup.find_root({ '.git', 'mvnw', 'gradlew', 'pom.xml', 'build.gradle' })
-        local home = os.getenv("HOME")
-        local jdtls_base_path = home .. '/.local/share/nvim/mason/packages/jdtls'
-        local lombok_path = home .. '/.m2/repository/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar'
-        local launcher_path = vim.fn.glob(jdtls_base_path .. '/plugins/org.eclipse.equinox.launcher_*.jar')
-        local config_path = jdtls_base_path .. '/config_' .. (vim.fn.has('mac') == 1 and 'mac' or 'linux')
+        local root_dir = require("jdtls.setup").find_root({ ".git", "mvnw", "gradlew", "pom.xml", "build.gradle" })
+        if not root_dir or root_dir == "" then
+            vim.notify("jdtls: no project root found", vim.log.levels.ERROR)
+            return
+        end
 
-        local project_name = vim.fn.fnamemodify(root_dir, ':p:h:t')
-        local workspace_dir = home .. '/.cache/jdtls-workspace/' .. project_name
+        local home          = vim.fn.expand("~")
+        -- Adjust this base if you want to use Mason instead (see note below)
+        local jdtls_repo    = home ..
+        "/.local/share/nvim/site/pack/core/opt/eclipse.jdt.ls/org.eclipse.jdt.ls.product/target/repository"
 
-        local config = {
-            cmd = {
-                'java',
-                '-Declipse.application=org.eclipse.jdt.ls.core.id1',
-                '-Dosgi.bundles.defaultStartLevel=4',
-                '-Declipse.product=org.eclipse.jdt.ls.core.product',
-                '-Dlog.protocol=true',
-                '-Dlog.level=ALL',
-                '-Xms1g',
-                '--add-modules=ALL-SYSTEM',
-                '--add-opens', 'java.base/java.util=ALL-UNNAMED',
-                '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
-                '-javaagent:' .. lombok_path,
-                '-jar', launcher_path,
-                '-configuration', config_path,
-                '-data', workspace_dir,
-            },
-            root_dir = root_dir,
-            capabilities = require('cmp_nvim_lsp').default_capabilities(),
+        local launcher_path = vim.fn.glob(jdtls_repo .. "/plugins/org.eclipse.equinox.launcher_*.jar", 1, 1)[1]
+        local config_path   = vim.fn.glob(jdtls_repo .. "/config_ss_linux", 1, 1)[1]
+            or vim.fn.glob(jdtls_repo .. "/config_linux", 1, 1)[1]
 
-            settings = {
-                java = {
-                    signatureHelp = { enabled = true },
-                    contentProvider = { preferred = 'fernflower' },
-                    saveActions = { organizeImports = true },
+        if not launcher_path or launcher_path == "" then
+            vim.notify("jdtls launcher jar not found", vim.log.levels.ERROR)
+            return
+        end
+        if not config_path or config_path == "" then
+            vim.notify("jdtls config dir not found", vim.log.levels.ERROR)
+            return
+        end
 
-                    -- Java 25 support
-                    configuration = {
-                        runtimes = {
-                            {
-                                name = "JavaSE-25",
-                                path = java_home,
-                                default = true,
-                            },
-                        },
-                    },
+        local workspace_dir = home .. "/.cache/jdtls-workspace/" .. vim.fn.fnamemodify(root_dir, ":p:h:t")
 
-                    -- Completion settings
-                    completion = {
-                        favoriteStaticMembers = {
-                            "org.junit.Assert.*",
-                            "org.junit.jupiter.api.Assertions.*",
-                            "org.mockito.Mockito.*",
-                            "java.util.Objects.requireNonNull",
-                            "java.util.Objects.requireNonNullElse",
-                        },
-                        importOrder = {
-                            "java",
-                            "javax",
-                            "com",
-                            "org",
-                        },
-                        filteredTypes = {
-                            "com.sun.*",
-                            "io.micrometer.shaded.*",
-                            "java.awt.*",
-                            "jdk.*",
-                            "sun.*",
-                        },
-                    },
-
-                    -- Sources
-                    sources = {
-                        organizeImports = {
-                            starThreshold = 9999,
-                            staticStarThreshold = 9999,
-                        },
-                    },
-
-                    -- Code generation
-                    codeGeneration = {
-                        toString = {
-                            template = "${object.className}{${member.name()}=${member.value}, ${otherMembers}}",
-                        },
-                        useBlocks = true,
-                        hashCodeEquals = {
-                            useInstanceof = true,
-                            useJava7Objects = true,
-                        },
-                    },
-
-                    -- Formatting
-                    format = {
-                        enabled = true,
-                        settings = {
-                            profile = "GoogleStyle",
-                        },
-                    },
-
-                    -- Inlay hints
-                    inlayHints = {
-                        parameterNames = {
-                            enabled = "all",
-                        },
-                    },
-
-                    -- References and implementation code lens
-                    referencesCodeLens = { enabled = true },
-                    implementationsCodeLens = { enabled = true },
-                },
-            },
-
+        local cmd = {
+            "java",
+            "-Declipse.application=org.eclipse.jdt.ls.core.id1",
+            "-Dosgi.bundles.defaultStartLevel=4",
+            "-Declipse.product=org.eclipse.jdt.ls.core.product",
+            "-Dlog.level=ALL",
+            "-Xms1g",
+            "--add-modules=ALL-SYSTEM",
+            "--add-opens", "java.base/java.util=ALL-UNNAMED",
+            "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+            "-jar", launcher_path,
+            "-configuration", config_path,
+            "-data", workspace_dir,
         }
 
-        jdtls.start_or_attach(config)
+        jdtls.start_or_attach({
+            cmd = cmd,
+            root_dir = root_dir,
+            capabilities = require("cmp_nvim_lsp").default_capabilities(),
+        })
     end,
 })
 
