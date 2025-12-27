@@ -177,7 +177,7 @@ vim.api.nvim_create_autocmd('FileType', {
 
         local root_dir = jdtls.setup.find_root({ '.git', 'mvnw', 'gradlew', 'pom.xml', 'build.gradle' })
         local home = os.getenv("HOME")
-        local jdtls_base_path = home .. '/.local/share/nvim/mason/packages/jdtls'
+        local jdtls_base_path = home .. '/.local/share/nvim/mason/packages/eclipse.jdt.ls/org.eclipse.jdt.ls.product/target/repository'
         local lombok_path = home .. '/.m2/repository/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar'
         local launcher_path = vim.fn.glob(jdtls_base_path .. '/plugins/org.eclipse.equinox.launcher_*.jar')
         local config_path = jdtls_base_path .. '/config_' .. (vim.fn.has('mac') == 1 and 'mac' or 'linux')
