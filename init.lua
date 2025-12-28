@@ -11,32 +11,6 @@ vim.o.swapfile = false
 vim.o.winborder = "rounded"
 vim.opt.smartindent = true
 
--- Filetype-specific indentation settings
-vim.api.nvim_create_autocmd("FileType", {
-    pattern = { "java" },
-    callback = function()
-        vim.opt_local.tabstop = 4
-        vim.opt_local.shiftwidth = 4
-        vim.opt_local.expandtab = true
-        vim.opt_local.cindent = true
-        vim.opt_local.cinoptions = "j1,(0,ws,Ws"
-    end,
-})
-
-vim.api.nvim_create_autocmd("FileType", {
-    pattern = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
-    callback = function()
-        vim.opt_local.tabstop = 2
-        vim.opt_local.shiftwidth = 2
-        vim.opt_local.expandtab = true
-    end,
-})
-
-vim.opt.backup = false   -- you already have
-vim.opt.swapfile = false -- you already have
-vim.opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
-vim.opt.undofile = true
-
 vim.opt.termguicolors = true
 vim.opt.scrolloff = 8
 vim.opt.updatetime = 50
@@ -44,9 +18,6 @@ vim.opt.colorcolumn = "80"
 
 vim.g.mapleader = " "
 
-
--- Binds
-vim.keymap.set('n', '<leader>o', ':update<CR> :source<CR>')
 vim.keymap.set({ "n", "v" }, "<leader>y", [["+y]])
 vim.keymap.set("n", "<leader>Y", [["+Y]])
 vim.keymap.set("x", "<leader>p", [["_dP]])
@@ -54,7 +25,7 @@ vim.keymap.set("n", "<leader>gs", vim.cmd.Git)
 
 -- Packer
 vim.pack.add({
-    { src = "https://github.com/rose-pine/neovim" },
+    { src = "https://github.com/vague2k/vague.nvim" },
     { src = "https://github.com/stevearc/oil.nvim" },
     { src = "https://github.com/nvim-telescope/telescope.nvim" },
     { src = "https://github.com/nvim-lua/plenary.nvim" },
@@ -73,8 +44,6 @@ vim.pack.add({
     { src = "https://github.com/rafamadriz/friendly-snippets" },
     { src = "https://github.com/mfussenegger/nvim-lint" },
     { src = "https://github.com/stevearc/conform.nvim" },
-    { src = "https://github.com/williamboman/mason.nvim" },
-    { src = "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim" },
     { src = "https://github.com/tpope/vim-fugitive" },
 })
 
@@ -91,11 +60,19 @@ vim.diagnostic.config({
 })
 
 -- LSP
-local lspconfig = require('lspconfig')
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
+capabilities.textDocument.completion.completionItem.snippetSupport = true
 
-lspconfig.lua_ls.setup({ capabilities = capabilities })
-lspconfig.ts_ls.setup({
+vim.lsp.config('html', {
+    capabilities = capabilities,
+})
+
+vim.lsp.config('lua_ls', {
+    capabilities = capabilities,
+    settings = { Lua = { diagnostics = { globals = { 'vim' } } } },  -- Add any extra settings you want; defaults from lspconfig apply
+})
+
+vim.lsp.config('ts_ls', {
     capabilities = capabilities,
     settings = {
         typescript = {
@@ -138,8 +115,11 @@ lspconfig.ts_ls.setup({
         },
     },
 })
-lspconfig.zls.setup({ capabilities = capabilities })
-lspconfig.pyright.setup({ capabilities = capabilities })
+
+vim.lsp.config('zls', { capabilities = capabilities })
+
+vim.lsp.config('pyright', { capabilities = capabilities })
+vim.lsp.enable({ 'lua_ls', 'ts_ls', 'zls', 'pyright', 'html' }, {})
 
 vim.api.nvim_create_autocmd('LspAttach', {
     callback = function(ev)
@@ -166,7 +146,15 @@ vim.api.nvim_create_autocmd('LspAttach', {
         end, { desc = "Go to Next Diagnostic", buffer = bufnr })
     end,
 })
--- vim.cmd("set completeopt+=noselect") -- Removed, as cmp.setup handles completeopt
+
+
+vim.api.nvim_create_autocmd('FileType', {
+    pattern = { "html" },
+    callback = function()
+        vim.bo.tabstop = 2
+        vim.bo.shiftwidth = 2
+    end,
+})
 
 -- jdtls
 vim.api.nvim_create_autocmd('FileType', {
@@ -177,7 +165,8 @@ vim.api.nvim_create_autocmd('FileType', {
 
         local root_dir = jdtls.setup.find_root({ '.git', 'mvnw', 'gradlew', 'pom.xml', 'build.gradle' })
         local home = os.getenv("HOME")
-        local jdtls_base_path = home .. '/.local/share/nvim/mason/packages/eclipse.jdt.ls/org.eclipse.jdt.ls.product/target/repository'
+        local jdtls_base_path = home ..
+            '/.local/share/nvim/site/pack/core/opt/eclipse.jdt.ls/org.eclipse.jdt.ls.product/target/repository'
         local lombok_path = home .. '/.m2/repository/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar'
         local launcher_path = vim.fn.glob(jdtls_base_path .. '/plugins/org.eclipse.equinox.launcher_*.jar')
         local config_path = jdtls_base_path .. '/config_' .. (vim.fn.has('mac') == 1 and 'mac' or 'linux')
@@ -448,89 +437,10 @@ cmp.setup({
 })
 
 -- Style
-vim.cmd("colorscheme rose-pine")
+vim.cmd("colorscheme vague")
 vim.cmd(":hi statusline guibg=NONE")
 
--- Mason setup for auto-installing linters and formatters
-require("mason").setup({
-    ui = {
-        icons = {
-            package_installed = "✓",
-            package_pending = "➜",
-            package_uninstalled = "✗",
-        },
-    },
-})
-
-require("mason-tool-installer").setup({
-    ensure_installed = {
-        "eslint_d",  -- JS/TS linter (faster than regular eslint)
-        "prettier",  -- Code formatter
-        "prettierd", -- Faster prettier daemon
-        "eslint-lsp"
-    },
-})
-
-vim.api.nvim_create_user_command("EslintFix", function()
-    local current_file = vim.fn.expand("%:p")
-    if current_file == "" then
-        vim.notify("No file to fix", vim.log.levels.WARN)
-        return
-    end
-
-    local cmd = string.format("eslint_d --fix %s", vim.fn.shellescape(current_file))
-    local result = vim.fn.system(cmd)
-
-    if vim.v.shell_error == 0 then
-        vim.cmd("edit!") -- Reload the file
-        vim.notify("ESLint fix applied", vim.log.levels.INFO)
-    else
-        vim.notify("ESLint fix failed: " .. result, vim.log.levels.ERROR)
-    end
-end, { desc = "Fix ESLint issues in current file" })
-
--- Add keymap for manual ESLint fixing
-vim.keymap.set("n", "<leader>ef", ":EslintFix<CR>", { desc = "Fix ESLint issues" })
-
--- Linting setup with nvim-lint
-local lint = require("lint")
-
-lint.linters_by_ft = {
-    javascript = { "eslint_d" },
-    typescript = { "eslint_d" },
-    javascriptreact = { "eslint_d" },
-    typescriptreact = { "eslint_d" },
-}
-
--- Auto-lint on various events
-local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
-vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
-    group = lint_augroup,
-    callback = function()
-        lint.try_lint()
-    end,
-})
-
--- Formatting setup with conform.nvim
 local conform = require("conform")
-
-conform.setup({
-    formatters_by_ft = {
-        javascript = { "prettierd", "prettier", stop_after_first = true },
-        typescript = { "prettierd", "prettier", stop_after_first = true },
-        javascriptreact = { "prettierd", "prettier", stop_after_first = true },
-        typescriptreact = { "prettierd", "prettier", stop_after_first = true },
-        json = { "prettierd", "prettier", stop_after_first = true },
-        css = { "prettierd", "prettier", stop_after_first = true },
-        html = { "prettierd", "prettier", stop_after_first = true },
-        markdown = { "prettierd", "prettier", stop_after_first = true },
-    },
-    format_on_save = {
-        timeout_ms = 500,
-        lsp_fallback = true,
-    },
-})
-
 -- Add manual format keymap (replaces your existing <leader>f)
 vim.keymap.set({ "n", "v" }, "<leader>f", function()
     conform.format({
@@ -540,7 +450,3 @@ vim.keymap.set({ "n", "v" }, "<leader>f", function()
     })
 end, { desc = "Format file or range (in visual mode)" })
 
--- Additional keymaps for linting
-vim.keymap.set("n", "<leader>l", function()
-    lint.try_lint()
-end, { desc = "Trigger linting for current file" })
