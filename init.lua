@@ -33,7 +33,7 @@ vim.pack.add({
     { src = "https://github.com/nvim-treesitter/nvim-treesitter" },
     { src = "https://github.com/mfussenegger/nvim-jdtls" },
     { src = "https://github.com/mbbill/undotree" },
-    { src = "https://github.com/ThePrimeagen/harpoon",                     version = "harpoon2" },
+    { src = "https://github.com/ThePrimeagen/harpoon",           version = "harpoon2" },
     { src = "https://github.com/zigtools/zls" },
     { src = "https://github.com/hrsh7th/nvim-cmp" },
     { src = "https://github.com/L3MON4D3/LuaSnip" },
@@ -67,9 +67,13 @@ vim.lsp.config('html', {
     capabilities = capabilities,
 })
 
+vim.lsp.config('cssls', {
+    capabilities = capabilities,
+})
+
 vim.lsp.config('lua_ls', {
     capabilities = capabilities,
-    settings = { Lua = { diagnostics = { globals = { 'vim' } } } },  -- Add any extra settings you want; defaults from lspconfig apply
+    settings = { Lua = { diagnostics = { globals = { 'vim' } } } }, -- Add any extra settings you want; defaults from lspconfig apply
 })
 
 vim.lsp.config('ts_ls', {
@@ -119,7 +123,7 @@ vim.lsp.config('ts_ls', {
 vim.lsp.config('zls', { capabilities = capabilities })
 
 vim.lsp.config('pyright', { capabilities = capabilities })
-vim.lsp.enable({ 'lua_ls', 'ts_ls', 'zls', 'pyright', 'html' }, {})
+vim.lsp.enable({ 'lua_ls', 'ts_ls', 'zls', 'pyright', 'html', 'cssls' }, {})
 
 vim.api.nvim_create_autocmd('LspAttach', {
     callback = function(ev)
@@ -438,6 +442,9 @@ cmp.setup({
 
 -- Style
 vim.cmd("colorscheme vague")
+vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
+vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
+
 vim.cmd(":hi statusline guibg=NONE")
 
 local conform = require("conform")
@@ -449,4 +456,3 @@ vim.keymap.set({ "n", "v" }, "<leader>f", function()
         timeout_ms = 1000,
     })
 end, { desc = "Format file or range (in visual mode)" })
-
