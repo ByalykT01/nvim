@@ -6,6 +6,7 @@ vim.o.wrap = false
 vim.o.tabstop = 4
 vim.o.expandtab = true
 vim.o.shiftwidth = 4
+vim.opt.guicursor = ""
 
 vim.o.swapfile = false
 vim.o.winborder = "rounded"
@@ -447,7 +448,16 @@ vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
 
 vim.cmd(":hi statusline guibg=NONE")
 
+require("conform").setup({
+    format_on_save = {
+        lsp_fallback = true,
+        async = false,
+        timeout_ms = 1000,
+    },
+})
+
 local conform = require("conform")
+
 -- Add manual format keymap (replaces your existing <leader>f)
 vim.keymap.set({ "n", "v" }, "<leader>f", function()
     conform.format({
