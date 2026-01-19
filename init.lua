@@ -46,6 +46,7 @@ vim.pack.add({
     { src = "https://github.com/mfussenegger/nvim-lint" },
     { src = "https://github.com/stevearc/conform.nvim" },
     { src = "https://github.com/tpope/vim-fugitive" },
+    { src = "https://github.com/jackielii/gopls.nvim" },
 })
 
 -- Set diagnostic display options
@@ -60,9 +61,27 @@ vim.diagnostic.config({
     },
 })
 
+
+
+
 -- LSP
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 capabilities.textDocument.completion.completionItem.snippetSupport = true
+
+vim.lsp.config('gopls', {
+    capabilities = capabilities,
+    settings = {
+        gopls = {
+            analyses = {
+                unusedparams = true,
+                shadow = true,
+                unusedwrite = true,
+            },
+            staticcheck = true,
+            gofumpt = true,   -- very popular choice nowadays
+        },
+    },
+})
 
 vim.lsp.config('html', {
     capabilities = capabilities,
@@ -124,7 +143,7 @@ vim.lsp.config('ts_ls', {
 vim.lsp.config('zls', { capabilities = capabilities })
 
 vim.lsp.config('pyright', { capabilities = capabilities })
-vim.lsp.enable({ 'lua_ls', 'ts_ls', 'zls', 'pyright', 'html', 'cssls' }, {})
+vim.lsp.enable({ 'lua_ls', 'ts_ls', 'zls', 'pyright', 'html', 'cssls', 'gopls' }, {})
 
 vim.api.nvim_create_autocmd('LspAttach', {
     callback = function(ev)
