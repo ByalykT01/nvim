@@ -47,6 +47,7 @@ vim.pack.add({
     { src = "https://github.com/stevearc/conform.nvim" },
     { src = "https://github.com/tpope/vim-fugitive" },
     { src = "https://github.com/jackielii/gopls.nvim" },
+    { src = "https://github.com/seblyng/roslyn.nvim" }
 })
 
 -- Set diagnostic display options
@@ -78,7 +79,7 @@ vim.lsp.config('gopls', {
                 unusedwrite = true,
             },
             staticcheck = true,
-            gofumpt = true,   -- very popular choice nowadays
+            gofumpt = true, -- very popular choice nowadays
         },
     },
 })
@@ -88,6 +89,10 @@ vim.lsp.config('html', {
 })
 
 vim.lsp.config('cssls', {
+    capabilities = capabilities,
+})
+
+vim.lsp.config('roslyn', {
     capabilities = capabilities,
 })
 
@@ -143,7 +148,7 @@ vim.lsp.config('ts_ls', {
 vim.lsp.config('zls', { capabilities = capabilities })
 
 vim.lsp.config('pyright', { capabilities = capabilities })
-vim.lsp.enable({ 'lua_ls', 'ts_ls', 'zls', 'pyright', 'html', 'cssls', 'gopls' }, {})
+vim.lsp.enable({ 'lua_ls', 'ts_ls', 'zls', 'pyright', 'html', 'cssls', 'gopls', 'roslyn' }, {})
 
 vim.api.nvim_create_autocmd('LspAttach', {
     callback = function(ev)
@@ -476,6 +481,20 @@ require("conform").setup({
 })
 
 local conform = require("conform")
+
+-- Use real tabs in any file named Makefile or makefile
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
+    pattern = { "Makefile", "makefile", "*.mk", "GNUmakefile" },
+    callback = function()
+        vim.bo.expandtab   = false
+        vim.bo.tabstop     = 8
+        vim.bo.shiftwidth  = 8
+        vim.bo.softtabstop = 8
+        -- Optional: show tabs clearly
+        -- vim.wo.list = true
+        -- vim.bo.listchars = "tab:→\\ "
+    end,
+})
 
 -- Add manual format keymap (replaces your existing <leader>f)
 vim.keymap.set({ "n", "v" }, "<leader>f", function()
