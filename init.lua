@@ -47,7 +47,10 @@ vim.pack.add({
     { src = "https://github.com/stevearc/conform.nvim" },
     { src = "https://github.com/tpope/vim-fugitive" },
     { src = "https://github.com/jackielii/gopls.nvim" },
-    { src = "https://github.com/seblyng/roslyn.nvim" }
+    { src = "https://github.com/seblyng/roslyn.nvim" },
+    { src = "https://github.com/mfussenegger/nvim-dap" },
+    { src = "https://github.com/rcarriga/nvim-dap-ui" },
+    { src = "https://github.com/nvim-neotest/nvim-nio" },
 })
 
 -- Set diagnostic display options
@@ -504,3 +507,167 @@ vim.keymap.set({ "n", "v" }, "<leader>f", function()
         timeout_ms = 1000,
     })
 end, { desc = "Format file or range (in visual mode)" })
+
+-- DAP (Debug Adapter Protocol) setup for C#
+local dap = require('dap')
+local dapui = require('dapui')
+
+-- Configure the netcoredbg adapter for C#
+dap.adapters.coreclr = {
+    type = 'executable',
+    command = vim.fn.expand('~/.local/share/netcoredbg/netcoredbg'),
+    args = { '--interpreter=vscode' }
+}
+
+-- C# debug configurations
+dap.configurations.cs = {
+    {
+        type = "coreclr",
+        name = "Launch - netcoredbg",
+        request = "launch",
+        program = get_dll_path,
+        cwd = '${workspaceFolder}',
+        stopAtEntry = false,
+        console = "integratedTerminal",
+        env = {
+            ASPNETCORE_ENVIRONMENT = "Development",
+        },
+    },
+    {
+        type = "coreclr",
+        name = "Launch (manual DLL selection)",
+        request = "launch",
+        program = function()
+            return vim.fn.input('Path to dll: ', vim.fn.getcwd() .. '/bin/Debug/', 'file')
+        end,
+        cwd = '${workspaceFolder}',
+        stopAtEntry = false,
+        console = "integratedTerminal",
+    },
+    {
+        type = "coreclr",
+        name = "Attach - netcoredbg",
+        request = "attach",
+        processId = require('dap.utils').pick_process,
+    },
+}
+
+-- DAP UI Setup
+dapui.setup({
+    icons = { expanded = "▾", collapsed = "▸", current_frame = "▸" },
+    mappings = {
+        -- Use a table to apply multiple mappings
+        expand = { "<CR>", "<2-LeftMouse>" },
+        open = "o",
+        remove = "d",
+        edit = "e",
+        repl = "r",
+        toggle = "t",
+    },
+    -- Expand lines larger than the window
+    expand_lines = true,
+    layouts = {
+        {
+            elements = {
+                { id = "scopes",      size = 0.35 },
+                { id = "breakpoints", size = 0.15 },
+                { id = "stacks",      size = 0.25 },
+                { id = "watches",     size = 0.25 },
+            },
+            size = 40,
+            position = "left",
+        },
+        {
+            elements = {
+                { id = "repl",    size = 0.5 },
+                { id = "console", size = 0.5 },
+            },
+            size = 0.25,
+            position = "bottom",
+        },
+    },
+    controls = {
+        enabled = true,
+        element = "repl",
+        icons = {
+            pause = "⏸",
+            play = "▶",
+            step_into = "⏎",
+            step_over = "⏭",
+            step_out = "⏮",
+            step_back = "↩",
+            run_last = "▶▶",
+            terminate = "⏹",
+            disconnect = "⏏",
+        },
+    },
+    floating = {
+        max_height = nil,
+        max_width = nil,
+        border = "rounded",
+        mappings = {
+            close = { "q", "<Esc>" },
+        },
+    },
+    render = {
+        max_type_length = nil,
+        max_value_lines = 100,
+        indent = 1,
+    },
+})
+
+-- Automatically open/close DAP UI when debugging starts/ends
+dap.listeners.before.attach.dapui_config = function()
+    dapui.open()
+end
+dap.listeners.before.launch.dapui_config = function()
+    dapui.open()
+end
+dap.listeners.before.event_terminated.dapui_config = function()
+    dapui.close()
+end
+dap.listeners.before.event_exited.dapui_config = function()
+    dapui.close()
+end
+
+-- DAP Keymaps
+vim.keymap.set('n', '<F5>', function() dap.continue() end, { desc = "DAP: Continue" })
+vim.keymap.set('n', '<F10>', function() dap.step_over() end, { desc = "DAP: Step Over" })
+vim.keymap.set('n', '<F11>', function() dap.step_into() end, { desc = "DAP: Step Into" })
+vim.keymap.set('n', '<F12>', function() dap.step_out() end, { desc = "DAP: Step Out" })
+vim.keymap.set('n', '<leader>db', function() dap.toggle_breakpoint() end, { desc = "DAP: Toggle Breakpoint" })
+vim.keymap.set('n', '<leader>dB', function()
+    dap.set_breakpoint(vim.fn.input('Breakpoint condition: '))
+end, { desc = "DAP: Conditional Breakpoint" })
+vim.keymap.set('n', '<leader>dl', function()
+    dap.set_breakpoint(nil, nil, vim.fn.input('Log point message: '))
+end, { desc = "DAP: Log Point" })
+vim.keymap.set('n', '<leader>dr', function() dap.repl.toggle() end, { desc = "DAP: Toggle REPL" })
+vim.keymap.set('n', '<leader>dc', function() dap.run_to_cursor() end, { desc = "DAP: Run to Cursor" })
+vim.keymap.set('n', '<leader>dt', function() dap.terminate() end, { desc = "DAP: Terminate" })
+
+-- DAP UI Keymaps
+vim.keymap.set('n', '<leader>du', function() dapui.toggle() end, { desc = "DAP UI: Toggle" })
+vim.keymap.set('n', '<leader>de', function() dapui.eval() end, { desc = "DAP UI: Evaluate" })
+vim.keymap.set('v', '<leader>de', function() dapui.eval() end, { desc = "DAP UI: Evaluate Selection" })
+vim.keymap.set('n', '<leader>df', function()
+    dapui.float_element(nil, { enter = true })
+end, { desc = "DAP UI: Float Element" })
+vim.keymap.set('n', '<leader>dw', function()
+    dapui.elements.watches.add(vim.fn.expand('<cword>'))
+end, { desc = "DAP UI: Add Watch" })
+
+-- DAP UI signs
+vim.fn.sign_define('DapBreakpoint', { text = '●', texthl = 'DapBreakpoint', linehl = '', numhl = '' })
+vim.fn.sign_define('DapBreakpointCondition', { text = '◐', texthl = 'DapBreakpointCondition', linehl = '', numhl = '' })
+vim.fn.sign_define('DapLogPoint', { text = '◆', texthl = 'DapLogPoint', linehl = '', numhl = '' })
+vim.fn.sign_define('DapStopped', { text = '▶', texthl = 'DapStopped', linehl = 'DapStoppedLine', numhl = '' })
+vim.fn.sign_define('DapBreakpointRejected', { text = '○', texthl = 'DapBreakpointRejected', linehl = '', numhl = '' })
+
+-- Highlight groups for DAP signs
+vim.api.nvim_set_hl(0, 'DapBreakpoint', { fg = '#e51400' })
+vim.api.nvim_set_hl(0, 'DapBreakpointCondition', { fg = '#f0a000' })
+vim.api.nvim_set_hl(0, 'DapLogPoint', { fg = '#61afef' })
+vim.api.nvim_set_hl(0, 'DapStopped', { fg = '#98c379' })
+vim.api.nvim_set_hl(0, 'DapStoppedLine', { bg = '#2e4d3d' })
+vim.api.nvim_set_hl(0, 'DapBreakpointRejected', { fg = '#656565' })
