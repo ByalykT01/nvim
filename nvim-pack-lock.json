@@ -61,6 +61,10 @@
       "rev": "72a04c4065345b51b56aed4859ea1d884f734097",
       "src": "https://github.com/rose-pine/neovim"
     },
+    "nui.nvim": {
+      "rev": "de740991c12411b663994b2860f1a4fd0937c130",
+      "src": "https://github.com/MunifTanjim/nui.nvim"
+    },
     "nvim-cmp": {
       "rev": "b5311ab3ed9c846b585c0c15b7559be131ec4be9",
       "src": "https://github.com/hrsh7th/nvim-cmp"
@@ -72,6 +76,10 @@
     "nvim-dap-ui": {
       "rev": "cf91d5e2d07c72903d052f5207511bf7ecdb7122",
       "src": "https://github.com/rcarriga/nvim-dap-ui"
+    },
+    "nvim-dbee": {
+      "rev": "dda517694889a5d238d7aa407403984da9f80cc0",
+      "src": "https://github.com/kndndrj/nvim-dbee"
     },
     "nvim-java": {
       "rev": "3d56b7461facb42f135e25b2636bf220a7f0ed42",

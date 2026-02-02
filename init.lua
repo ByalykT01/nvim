@@ -51,6 +51,8 @@ vim.pack.add({
     { src = "https://github.com/mfussenegger/nvim-dap" },
     { src = "https://github.com/rcarriga/nvim-dap-ui" },
     { src = "https://github.com/nvim-neotest/nvim-nio" },
+    { src = "https://github.com/kndndrj/nvim-dbee" },
+    { src = "https://github.com/MunifTanjim/nui.nvim" },
 })
 
 -- Set diagnostic display options
@@ -483,6 +485,9 @@ require("conform").setup({
     },
 })
 
+
+require("dbee").setup()
+
 local conform = require("conform")
 
 -- Use real tabs in any file named Makefile or makefile
@@ -493,9 +498,6 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
         vim.bo.tabstop     = 8
         vim.bo.shiftwidth  = 8
         vim.bo.softtabstop = 8
-        -- Optional: show tabs clearly
-        -- vim.wo.list = true
-        -- vim.bo.listchars = "tab:→\\ "
     end,
 })
 
