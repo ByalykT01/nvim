@@ -31,10 +31,10 @@ vim.pack.add({
     { src = "https://github.com/nvim-telescope/telescope.nvim" },
     { src = "https://github.com/nvim-lua/plenary.nvim" },
     { src = "https://github.com/neovim/nvim-lspconfig" },
-    { src = "https://github.com/nvim-treesitter/nvim-treesitter" },
+    { src = "https://github.com/nvim-treesitter/nvim-treesitter",          version = "main" },
     { src = "https://github.com/mfussenegger/nvim-jdtls" },
     { src = "https://github.com/mbbill/undotree" },
-    { src = "https://github.com/ThePrimeagen/harpoon",           version = "harpoon2" },
+    { src = "https://github.com/ThePrimeagen/harpoon",                     version = "harpoon2" },
     { src = "https://github.com/zigtools/zls" },
     { src = "https://github.com/hrsh7th/nvim-cmp" },
     { src = "https://github.com/L3MON4D3/LuaSnip" },
@@ -53,6 +53,8 @@ vim.pack.add({
     { src = "https://github.com/nvim-neotest/nvim-nio" },
     { src = "https://github.com/kndndrj/nvim-dbee" },
     { src = "https://github.com/MunifTanjim/nui.nvim" },
+    { src = "https://github.com/MeanderingProgrammer/render-markdown.nvim" },
+    -- { src = "https://github.com/MrcJkb/haskell-tools.nvim" }
 })
 
 -- Set diagnostic display options
@@ -97,13 +99,9 @@ vim.lsp.config('cssls', {
     capabilities = capabilities,
 })
 
-vim.lsp.config('roslyn', {
-    capabilities = capabilities,
-})
-
 vim.lsp.config('lua_ls', {
     capabilities = capabilities,
-    settings = { Lua = { diagnostics = { globals = { 'vim' } } } }, -- Add any extra settings you want; defaults from lspconfig apply
+    settings = { Lua = { diagnostics = { globals = { 'vim' } } } },
 })
 
 vim.lsp.config('ts_ls', {
@@ -153,7 +151,53 @@ vim.lsp.config('ts_ls', {
 vim.lsp.config('zls', { capabilities = capabilities })
 
 vim.lsp.config('pyright', { capabilities = capabilities })
-vim.lsp.enable({ 'lua_ls', 'ts_ls', 'zls', 'pyright', 'html', 'cssls', 'gopls', 'roslyn' }, {})
+
+vim.lsp.config('hls', {
+    capabilities = capabilities,
+    cmd = { 'haskell-language-server-wrapper', '--lsp' },
+})
+
+vim.lsp.config('marksman', { capabilities = capabilities })
+
+vim.lsp.enable({ 'lua_ls', 'ts_ls', 'zls', 'pyright', 'html', 'cssls', 'gopls', 'hls', 'marksman' })
+
+local roslyn_cmd = (function()
+    local home = os.getenv("HOME") or ""
+    local log_args = { "--logLevel=Information", "--extensionLogDirectory=" .. vim.fn.stdpath("log"), "--stdio" }
+
+    local bin_candidates = vim.tbl_filter(function(v) return v and v ~= "" end, {
+        os.getenv("ROSLYN_LSP"),
+        "Microsoft.CodeAnalysis.LanguageServer",
+        home .. "/.local/share/roslyn/Microsoft.CodeAnalysis.LanguageServer",
+    })
+    for _, bin in ipairs(bin_candidates) do
+        if vim.fn.executable(bin) == 1 then
+            return vim.list_extend({ bin }, log_args)
+        end
+    end
+
+    local dll = home .. "/.local/share/roslyn/Microsoft.CodeAnalysis.LanguageServer.dll"
+    if vim.fn.filereadable(dll) == 1 and vim.fn.executable("dotnet") == 1 then
+        return vim.list_extend({ "dotnet", dll }, log_args)
+    end
+
+    return nil
+end)()
+
+if roslyn_cmd then
+    vim.lsp.config('roslyn', {
+        cmd = roslyn_cmd,
+        capabilities = capabilities,
+    })
+    require('roslyn').setup({})
+else
+    vim.schedule(function()
+        vim.notify(
+            "roslyn: LSP binary not found. Install Microsoft.CodeAnalysis.LanguageServer to $PATH or ~/.local/share/roslyn/, or set $ROSLYN_LSP.",
+            vim.log.levels.WARN
+        )
+    end)
+end
 
 vim.api.nvim_create_autocmd('LspAttach', {
     callback = function(ev)
@@ -190,43 +234,97 @@ vim.api.nvim_create_autocmd('FileType', {
     end,
 })
 
--- jdtls
 vim.api.nvim_create_autocmd('FileType', {
+    pattern = "cs",
+    callback = function()
+        vim.bo.cindent = true
+    end,
+})
+
+-- jdtls
+local function jdtls_paths()
+    local home = os.getenv("HOME") or ""
+    local candidates = vim.tbl_filter(function(v) return v and v ~= "" end, {
+        os.getenv("JDTLS_HOME"),
+        home .. "/.local/share/jdtls",
+        home .. "/.local/share/nvim/site/pack/core/opt/eclipse.jdt.ls/org.eclipse.jdt.ls.product/target/repository",
+    })
+    -- Antigravity Red Hat Java extension fallback (bundles a recent JDT.LS).
+    vim.list_extend(candidates,
+        vim.fn.glob(home .. "/.antigravity/extensions/redhat.java-*-linux-x64/server", false, true))
+
+    local os_tag = vim.fn.has("mac") == 1 and "mac" or "linux"
+    for _, base in ipairs(candidates) do
+        local launcher = vim.fn.glob(base .. "/plugins/org.eclipse.equinox.launcher_*.jar")
+        local config_dir = base .. "/config_" .. os_tag
+        if launcher ~= "" and vim.fn.isdirectory(config_dir) == 1 then
+            return { launcher = launcher, config = config_dir }
+        end
+    end
+    return nil
+end
+
+local function latest_lombok_jar()
+    local home = os.getenv("HOME") or ""
+    local jars = vim.fn.glob(home .. "/.m2/repository/org/projectlombok/lombok/*/lombok-*.jar", false, true)
+    local main = vim.tbl_filter(function(p)
+        return not (p:match("%-sources%.jar$") or p:match("%-javadoc%.jar$"))
+    end, jars)
+    table.sort(main)
+    return main[#main]
+end
+
+local jdtls_group = vim.api.nvim_create_augroup("UserJdtls", { clear = true })
+vim.api.nvim_create_autocmd('FileType', {
+    group = jdtls_group,
     pattern = 'java',
     callback = function()
+        local paths = jdtls_paths()
+        if not paths then
+            vim.schedule(function()
+                vim.notify(
+                    "jdtls: launcher not found. Set $JDTLS_HOME or install to ~/.local/share/jdtls.",
+                    vim.log.levels.WARN
+                )
+            end)
+            return
+        end
+
         local jdtls = require('jdtls')
         local java_home = os.getenv("JAVA_HOME")
+        local home = os.getenv("HOME")
+        local lombok = latest_lombok_jar()
 
         local root_dir = jdtls.setup.find_root({ '.git', 'mvnw', 'gradlew', 'pom.xml', 'build.gradle' })
-        local home = os.getenv("HOME")
-        local jdtls_base_path = home ..
-            '/.local/share/nvim/site/pack/core/opt/eclipse.jdt.ls/org.eclipse.jdt.ls.product/target/repository'
-        local lombok_path = home .. '/.m2/repository/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar'
-        local launcher_path = vim.fn.glob(jdtls_base_path .. '/plugins/org.eclipse.equinox.launcher_*.jar')
-        local config_path = jdtls_base_path .. '/config_' .. (vim.fn.has('mac') == 1 and 'mac' or 'linux')
-
         local project_name = vim.fn.fnamemodify(root_dir, ':p:h:t')
         local workspace_dir = home .. '/.cache/jdtls-workspace/' .. project_name
 
+        local cmd = {
+            'java',
+            '-Declipse.application=org.eclipse.jdt.ls.core.id1',
+            '-Dosgi.bundles.defaultStartLevel=4',
+            '-Declipse.product=org.eclipse.jdt.ls.core.product',
+            '-Dlog.protocol=true',
+            '-Dlog.level=ALL',
+            '-Xms1g',
+            '-Xmx4g',
+            '--add-modules=ALL-SYSTEM',
+            '--add-opens', 'java.base/java.util=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+        }
+        if lombok then
+            table.insert(cmd, '-javaagent:' .. lombok)
+        end
+        vim.list_extend(cmd, {
+            '-jar', paths.launcher,
+            '-configuration', paths.config,
+            '-data', workspace_dir,
+        })
+
         local config = {
-            cmd = {
-                'java',
-                '-Declipse.application=org.eclipse.jdt.ls.core.id1',
-                '-Dosgi.bundles.defaultStartLevel=4',
-                '-Declipse.product=org.eclipse.jdt.ls.core.product',
-                '-Dlog.protocol=true',
-                '-Dlog.level=ALL',
-                '-Xms1g',
-                '--add-modules=ALL-SYSTEM',
-                '--add-opens', 'java.base/java.util=ALL-UNNAMED',
-                '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
-                '-javaagent:' .. lombok_path,
-                '-jar', launcher_path,
-                '-configuration', config_path,
-                '-data', workspace_dir,
-            },
+            cmd = cmd,
             root_dir = root_dir,
-            capabilities = require('cmp_nvim_lsp').default_capabilities(),
+            capabilities = capabilities,
 
             settings = {
                 java = {
@@ -332,18 +430,47 @@ require 'harpoon'.setup({
     },
 })
 
--- Treesitter setup for better syntax highlighting and indentation
-require 'nvim-treesitter.configs'.setup({
-    ensure_installed = { "java", "typescript", "javascript", "tsx", "lua", "python", "zig", "json", "html", "css" },
-    sync_install = false,
-    auto_install = true,
-    highlight = {
-        enable = true,
-        additional_vim_regex_highlighting = false,
-    },
-    indent = {
-        enable = true,
-    },
+-- Treesitter setup for Neovim 0.12 API
+local treesitter = require('nvim-treesitter')
+local treesitter_parsers = { "java", "typescript", "javascript", "tsx", "lua", "python", "zig", "json", "html", "css",
+    "c_sharp", "haskell", "markdown", "markdown_inline" }
+
+treesitter.setup()
+
+if vim.fn.executable('tree-sitter') == 1 then
+    local installed_parsers = treesitter.get_installed()
+    local missing_parsers = vim.iter(treesitter_parsers)
+        :filter(function(parser)
+            return not vim.tbl_contains(installed_parsers, parser)
+        end)
+        :totable()
+
+    if #missing_parsers > 0 then
+        treesitter.install(missing_parsers)
+    end
+else
+    vim.notify(
+        "tree-sitter CLI is required for nvim-treesitter parser installs. Install it via your package manager.",
+        vim.log.levels.WARN
+    )
+end
+
+local treesitter_augroup = vim.api.nvim_create_augroup('UserTreesitter', { clear = true })
+vim.api.nvim_create_autocmd('FileType', {
+    group = treesitter_augroup,
+    callback = function(args)
+        if pcall(vim.treesitter.start, args.buf) then
+            local lang = vim.treesitter.language.get_lang(args.match) or args.match
+            local ok, query = pcall(vim.treesitter.query.get, lang, "indents")
+            if ok and query then
+                vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+            end
+        end
+    end,
+})
+
+require('render-markdown').setup({
+    completions = { lsp = { enabled = true } },
 })
 
 -- telescope
@@ -478,6 +605,17 @@ vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
 vim.cmd(":hi statusline guibg=NONE")
 
 require("conform").setup({
+    formatters_by_ft = {
+        json = { "jq" },
+        -- jq can't parse comments, so let the LSP handle jsonc
+        jsonc = { lsp_format = "fallback" },
+    },
+    formatters = {
+        jq = {
+            -- keep 4-space indentation to match the rest of the config
+            prepend_args = { "--indent", "4" },
+        },
+    },
     format_on_save = {
         lsp_fallback = true,
         async = false,
@@ -514,10 +652,34 @@ end, { desc = "Format file or range (in visual mode)" })
 local dap = require('dap')
 local dapui = require('dapui')
 
+local function resolve_executable(candidates)
+    for _, candidate in ipairs(candidates) do
+        if vim.fn.executable(candidate) == 1 then
+            return candidate
+        end
+    end
+
+    return nil
+end
+
+local function get_dll_path()
+    local cwd = vim.fn.getcwd()
+    local debug_dlls = vim.fn.glob(cwd .. '/**/bin/Debug/**/*.dll', true, true)
+    local default_path = debug_dlls[1] or (cwd .. '/bin/Debug/')
+
+    return vim.fn.input('Path to dll: ', default_path, 'file')
+end
+
+local netcoredbg = resolve_executable({
+    'netcoredbg',
+    vim.fn.stdpath('data') .. '/mason/bin/netcoredbg',
+    vim.fn.expand('~/.local/share/netcoredbg/netcoredbg'),
+})
+
 -- Configure the netcoredbg adapter for C#
 dap.adapters.coreclr = {
     type = 'executable',
-    command = vim.fn.expand('~/.local/share/netcoredbg/netcoredbg'),
+    command = netcoredbg or 'netcoredbg',
     args = { '--interpreter=vscode' }
 }
 
@@ -534,17 +696,6 @@ dap.configurations.cs = {
         env = {
             ASPNETCORE_ENVIRONMENT = "Development",
         },
-    },
-    {
-        type = "coreclr",
-        name = "Launch (manual DLL selection)",
-        request = "launch",
-        program = function()
-            return vim.fn.input('Path to dll: ', vim.fn.getcwd() .. '/bin/Debug/', 'file')
-        end,
-        cwd = '${workspaceFolder}',
-        stopAtEntry = false,
-        console = "integratedTerminal",
     },
     {
         type = "coreclr",

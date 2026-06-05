@@ -36,6 +36,10 @@
       "rev": "572f5660cf05f8cd8834e096d7b4c921ba18e175",
       "src": "https://github.com/rafamadriz/friendly-snippets"
     },
+    "gitsigns.nvim": {
+      "rev": "0d797daee85366bc242580e352a4f62d67557b84",
+      "src": "https://github.com/lewis6991/gitsigns.nvim"
+    },
     "gopls.nvim": {
       "rev": "e07e95d7b5e2184e4bff268fb624a01b5955a8df",
       "src": "https://github.com/jackielii/gopls.nvim"
@@ -45,9 +49,17 @@
       "src": "https://github.com/ThePrimeagen/harpoon",
       "version": "'harpoon2'"
     },
+    "haskell-tools.nvim": {
+      "rev": "754270182bdd3ce62ed86c97bd8c5de359daefde",
+      "src": "https://github.com/mrcjkb/haskell-tools.nvim.git"
+    },
     "htmx-lsp": {
       "rev": "a05bf01d33710f1e86e3e4165badda9826a7a9bb",
       "src": "https://github.com/ThePrimeagen/htmx-lsp"
+    },
+    "lualine.nvim": {
+      "rev": "8811f3f3f4dc09d740c67e9ce399e7a541e2e5b2",
+      "src": "https://github.com/nvim-lualine/lualine.nvim"
     },
     "mason-tool-installer.nvim": {
       "rev": "517ef5994ef9d6b738322664d5fdd948f0fdeb46",
@@ -103,7 +115,12 @@
     },
     "nvim-treesitter": {
       "rev": "42fc28ba918343ebfd5565147a42a26580579482",
-      "src": "https://github.com/nvim-treesitter/nvim-treesitter"
+      "src": "https://github.com/nvim-treesitter/nvim-treesitter",
+      "version": "'main'"
+    },
+    "nvim-web-devicons": {
+      "rev": "40e9d5a6cc3db11b309e39593fc7ac03bb844e38",
+      "src": "https://github.com/nvim-tree/nvim-web-devicons"
     },
     "oil.nvim": {
       "rev": "07f80ad645895af849a597d1cac897059d89b686",
@@ -112,6 +129,10 @@
     "plenary.nvim": {
       "rev": "b9fd5226c2f76c951fc8ed5923d85e4de065e509",
       "src": "https://github.com/nvim-lua/plenary.nvim"
+    },
+    "render-markdown.nvim": {
+      "rev": "5adf0895310c1904e5abfaad40a2baad7fe44a07",
+      "src": "https://github.com/MeanderingProgrammer/render-markdown.nvim"
     },
     "roslyn.nvim": {
       "rev": "2b9a8366a29b0a2a7e51cac87f3ca6345f617790",
@@ -129,6 +150,10 @@
       "rev": "b4da76be54691e854d3e0e02c36b0245f945c2c7",
       "src": "https://github.com/nvim-telescope/telescope.nvim"
     },
+    "texlab": {
+      "rev": "ef2cbb703cb924d75e2df247c66939ccf8acc0f0",
+      "src": "https://github.com/latex-lsp/texlab.git"
+    },
     "undotree": {
       "rev": "fe9a9d0645f0f5532360b5e5f5c550d7bb4f1869",
       "src": "https://github.com/mbbill/undotree"
@@ -140,6 +165,14 @@
     "vim-fugitive": {
       "rev": "61b51c09b7c9ce04e821f6cf76ea4f6f903e3cf4",
       "src": "https://github.com/tpope/vim-fugitive"
+    },
+    "vimtex": {
+      "rev": "95b93a24740f7b89dd8331326b41bdd1337d79f6",
+      "src": "https://github.com/lervag/vimtex.git"
+    },
+    "which-key.nvim": {
+      "rev": "3aab2147e74890957785941f0c1ad87d0a44c15a",
+      "src": "https://github.com/folke/which-key.nvim"
     },
     "zls": {
       "rev": "829f566c1203ab98612577885a85e07eb0101961",
