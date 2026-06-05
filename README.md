@@ -1,5 +1,5 @@
 ### My nvim config
-Prerequisite: install [ripgrep](https://github.com/BurntSushi/ripgrep).
+Prerequisites: install [ripgrep](https://github.com/BurntSushi/ripgrep) and the [`tree-sitter` CLI](https://tree-sitter.github.io/tree-sitter/) (via your package manager, not npm).
 
 This config was mostly built on ThePrimeagen's config [init.lua](https://github.com/ThePrimeagen/init.lua)
 
