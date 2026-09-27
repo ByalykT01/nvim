@@ -6,3 +6,4 @@ debug
 foo.*
 *.log
 data
+SETUP.local.md

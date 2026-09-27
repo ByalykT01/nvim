@@ -24,7 +24,7 @@ vim.keymap.set("n", "<leader>Y", [["+Y]])
 vim.keymap.set("x", "<leader>p", [["_dP]])
 vim.keymap.set("n", "<leader>gs", vim.cmd.Git)
 
--- Packer
+-- Neovim's native package manager (0.12+)
 vim.pack.add({
     { src = "https://github.com/vague2k/vague.nvim" },
     { src = "https://github.com/stevearc/oil.nvim" },
@@ -35,7 +35,6 @@ vim.pack.add({
     { src = "https://github.com/mfussenegger/nvim-jdtls" },
     { src = "https://github.com/mbbill/undotree" },
     { src = "https://github.com/ThePrimeagen/harpoon",                     version = "harpoon2" },
-    { src = "https://github.com/zigtools/zls" },
     { src = "https://github.com/hrsh7th/nvim-cmp" },
     { src = "https://github.com/L3MON4D3/LuaSnip" },
     { src = "https://github.com/saadparwaiz1/cmp_luasnip" },
@@ -43,7 +42,6 @@ vim.pack.add({
     { src = "https://github.com/hrsh7th/cmp-buffer" },
     { src = "https://github.com/hrsh7th/cmp-path" },
     { src = "https://github.com/rafamadriz/friendly-snippets" },
-    { src = "https://github.com/mfussenegger/nvim-lint" },
     { src = "https://github.com/stevearc/conform.nvim" },
     { src = "https://github.com/tpope/vim-fugitive" },
     { src = "https://github.com/jackielii/gopls.nvim" },
@@ -161,22 +159,27 @@ vim.lsp.config('marksman', { capabilities = capabilities })
 
 vim.lsp.enable({ 'lua_ls', 'ts_ls', 'zls', 'pyright', 'html', 'cssls', 'gopls', 'hls', 'marksman' })
 
+local function local_data_path(...)
+    return vim.fs.joinpath(vim.fn.stdpath('data'), ...)
+end
+
 local roslyn_cmd = (function()
-    local home = os.getenv("HOME") or ""
     local log_args = { "--logLevel=Information", "--extensionLogDirectory=" .. vim.fn.stdpath("log"), "--stdio" }
 
-    local bin_candidates = vim.tbl_filter(function(v) return v and v ~= "" end, {
-        os.getenv("ROSLYN_LSP"),
+    local bin_candidates = {
         "Microsoft.CodeAnalysis.LanguageServer",
-        home .. "/.local/share/roslyn/Microsoft.CodeAnalysis.LanguageServer",
-    })
+        local_data_path('roslyn', 'Microsoft.CodeAnalysis.LanguageServer'),
+        local_data_path('roslyn', 'Microsoft.CodeAnalysis.LanguageServer.exe'),
+    }
+    local override = os.getenv('ROSLYN_LSP')
+    if override and override ~= '' then table.insert(bin_candidates, 1, override) end
     for _, bin in ipairs(bin_candidates) do
         if vim.fn.executable(bin) == 1 then
             return vim.list_extend({ bin }, log_args)
         end
     end
 
-    local dll = home .. "/.local/share/roslyn/Microsoft.CodeAnalysis.LanguageServer.dll"
+    local dll = local_data_path('roslyn', 'Microsoft.CodeAnalysis.LanguageServer.dll')
     if vim.fn.filereadable(dll) == 1 and vim.fn.executable("dotnet") == 1 then
         return vim.list_extend({ "dotnet", dll }, log_args)
     end
@@ -193,7 +196,7 @@ if roslyn_cmd then
 else
     vim.schedule(function()
         vim.notify(
-            "roslyn: LSP binary not found. Install Microsoft.CodeAnalysis.LanguageServer to $PATH or ~/.local/share/roslyn/, or set $ROSLYN_LSP.",
+            "roslyn: LSP binary not found. Put it on PATH, under stdpath('data')/roslyn, or set ROSLYN_LSP.",
             vim.log.levels.WARN
         )
     end)
@@ -243,30 +246,26 @@ vim.api.nvim_create_autocmd('FileType', {
 
 -- jdtls
 local function jdtls_paths()
-    local home = os.getenv("HOME") or ""
-    local candidates = vim.tbl_filter(function(v) return v and v ~= "" end, {
-        os.getenv("JDTLS_HOME"),
-        home .. "/.local/share/jdtls",
-        home .. "/.local/share/nvim/site/pack/core/opt/eclipse.jdt.ls/org.eclipse.jdt.ls.product/target/repository",
-    })
-    -- Antigravity Red Hat Java extension fallback (bundles a recent JDT.LS).
-    vim.list_extend(candidates,
-        vim.fn.glob(home .. "/.antigravity/extensions/redhat.java-*-linux-x64/server", false, true))
-
-    local os_tag = vim.fn.has("mac") == 1 and "mac" or "linux"
+    local candidates = { local_data_path('jdtls') }
+    local override = os.getenv('JDTLS_HOME')
+    if override and override ~= '' then table.insert(candidates, 1, override) end
+    local os_tag = vim.fn.has('win32') == 1 and 'win' or (vim.fn.has('mac') == 1 and 'mac' or 'linux')
     for _, base in ipairs(candidates) do
-        local launcher = vim.fn.glob(base .. "/plugins/org.eclipse.equinox.launcher_*.jar")
-        local config_dir = base .. "/config_" .. os_tag
-        if launcher ~= "" and vim.fn.isdirectory(config_dir) == 1 then
-            return { launcher = launcher, config = config_dir }
+        for _, repository in ipairs({ base, vim.fs.joinpath(base, 'org.eclipse.jdt.ls.product', 'target', 'repository') }) do
+            local launchers = vim.fn.glob(vim.fs.joinpath(repository, 'plugins', 'org.eclipse.equinox.launcher_*.jar'), false, true)
+            local config_dir = vim.fs.joinpath(repository, 'config_' .. os_tag)
+            if #launchers > 0 and vim.fn.isdirectory(config_dir) == 1 then
+                return { launcher = launchers[1], config = config_dir }
+            end
         end
     end
     return nil
 end
 
 local function latest_lombok_jar()
-    local home = os.getenv("HOME") or ""
-    local jars = vim.fn.glob(home .. "/.m2/repository/org/projectlombok/lombok/*/lombok-*.jar", false, true)
+    local explicit = os.getenv('LOMBOK_JAR')
+    if explicit and vim.fn.filereadable(explicit) == 1 then return explicit end
+    local jars = vim.fn.glob(vim.fs.joinpath(vim.fn.expand('~'), '.m2', 'repository', 'org', 'projectlombok', 'lombok', '*', 'lombok-*.jar'), false, true)
     local main = vim.tbl_filter(function(p)
         return not (p:match("%-sources%.jar$") or p:match("%-javadoc%.jar$"))
     end, jars)
@@ -283,7 +282,7 @@ vim.api.nvim_create_autocmd('FileType', {
         if not paths then
             vim.schedule(function()
                 vim.notify(
-                    "jdtls: launcher not found. Set $JDTLS_HOME or install to ~/.local/share/jdtls.",
+                    "jdtls: launcher not found. Set JDTLS_HOME or install under stdpath('data')/jdtls.",
                     vim.log.levels.WARN
                 )
             end)
@@ -291,13 +290,14 @@ vim.api.nvim_create_autocmd('FileType', {
         end
 
         local jdtls = require('jdtls')
-        local java_home = os.getenv("JAVA_HOME")
-        local home = os.getenv("HOME")
         local lombok = latest_lombok_jar()
 
         local root_dir = jdtls.setup.find_root({ '.git', 'mvnw', 'gradlew', 'pom.xml', 'build.gradle' })
-        local project_name = vim.fn.fnamemodify(root_dir, ':p:h:t')
-        local workspace_dir = home .. '/.cache/jdtls-workspace/' .. project_name
+        if not root_dir then return end
+        local project_name = vim.fn.fnamemodify(root_dir, ':t')
+        local workspace_dir = vim.fs.joinpath(vim.fn.stdpath('cache'), 'jdtls-workspace',
+            project_name .. '-' .. vim.fn.sha256(root_dir):sub(1, 8))
+        vim.fn.mkdir(workspace_dir, 'p')
 
         local cmd = {
             'java',
@@ -331,17 +331,6 @@ vim.api.nvim_create_autocmd('FileType', {
                     signatureHelp = { enabled = true },
                     contentProvider = { preferred = 'fernflower' },
                     saveActions = { organizeImports = true },
-
-                    -- Java 25 support
-                    configuration = {
-                        runtimes = {
-                            {
-                                name = "JavaSE-25",
-                                path = java_home,
-                                default = true,
-                            },
-                        },
-                    },
 
                     -- Completion settings
                     completion = {
@@ -617,7 +606,7 @@ require("conform").setup({
         },
     },
     format_on_save = {
-        lsp_fallback = true,
+        lsp_format = 'fallback',
         async = false,
         timeout_ms = 1000,
     },
@@ -642,7 +631,7 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
 -- Add manual format keymap (replaces your existing <leader>f)
 vim.keymap.set({ "n", "v" }, "<leader>f", function()
     conform.format({
-        lsp_fallback = true,
+        lsp_format = 'fallback',
         async = false,
         timeout_ms = 1000,
     })
@@ -654,7 +643,7 @@ local dapui = require('dapui')
 
 local function resolve_executable(candidates)
     for _, candidate in ipairs(candidates) do
-        if vim.fn.executable(candidate) == 1 then
+        if candidate and vim.fn.executable(candidate) == 1 then
             return candidate
         end
     end
@@ -671,9 +660,10 @@ local function get_dll_path()
 end
 
 local netcoredbg = resolve_executable({
+    os.getenv('NETCOREDBG') or '',
     'netcoredbg',
-    vim.fn.stdpath('data') .. '/mason/bin/netcoredbg',
-    vim.fn.expand('~/.local/share/netcoredbg/netcoredbg'),
+    local_data_path('mason', 'bin', vim.fn.has('win32') == 1 and 'netcoredbg.cmd' or 'netcoredbg'),
+    local_data_path('netcoredbg', vim.fn.has('win32') == 1 and 'netcoredbg.exe' or 'netcoredbg'),
 })
 
 -- Configure the netcoredbg adapter for C#
