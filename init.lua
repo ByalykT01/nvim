@@ -164,9 +164,10 @@ local function local_data_path(...)
 end
 
 local roslyn_cmd = (function()
-    local log_args = { "--logLevel=Information", "--extensionLogDirectory=" .. vim.fn.stdpath("log"), "--stdio" }
+    local log_args = { "--logLevel", "Information", "--extensionLogDirectory", vim.fn.stdpath("log"), "--stdio" }
 
     local bin_candidates = {
+        "roslyn-language-server",
         "Microsoft.CodeAnalysis.LanguageServer",
         local_data_path('roslyn', 'Microsoft.CodeAnalysis.LanguageServer'),
         local_data_path('roslyn', 'Microsoft.CodeAnalysis.LanguageServer.exe'),
