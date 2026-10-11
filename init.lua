@@ -3,9 +3,10 @@ vim.o.relativenumber = true
 vim.o.signcolumn = "yes"
 vim.opt.isfname:append("@-@")
 vim.o.wrap = false
-vim.o.tabstop = 4
+vim.o.tabstop = 2
 vim.o.expandtab = true
-vim.o.shiftwidth = 4
+vim.o.shiftwidth = 2
+vim.o.softtabstop = 2
 vim.opt.guicursor = ""
 
 vim.o.swapfile = false
@@ -604,8 +605,8 @@ require("conform").setup({
     },
     formatters = {
         jq = {
-            -- keep 4-space indentation to match the rest of the config
-            prepend_args = { "--indent", "4" },
+            -- Match Neovim's two-space indentation.
+            prepend_args = { "--indent", "2" },
         },
     },
     format_on_save = {
