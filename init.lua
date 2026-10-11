@@ -148,6 +148,8 @@ vim.lsp.config('ts_ls', {
 
 vim.lsp.config('zls', { capabilities = capabilities })
 
+vim.lsp.config('clangd', { capabilities = capabilities })
+
 vim.lsp.config('pyright', { capabilities = capabilities })
 
 vim.lsp.config('hls', {
@@ -157,7 +159,7 @@ vim.lsp.config('hls', {
 
 vim.lsp.config('marksman', { capabilities = capabilities })
 
-vim.lsp.enable({ 'lua_ls', 'ts_ls', 'zls', 'pyright', 'html', 'cssls', 'gopls', 'hls', 'marksman' })
+vim.lsp.enable({ 'lua_ls', 'ts_ls', 'zls', 'clangd', 'pyright', 'html', 'cssls', 'gopls', 'hls', 'marksman' })
 
 local function local_data_path(...)
     return vim.fs.joinpath(vim.fn.stdpath('data'), ...)
